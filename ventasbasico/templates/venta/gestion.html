@@ -12,5 +12,25 @@
         <li>actualizar stock</li>
         <li>eliminar productos</li>
     </ul>
+
+    <h2>{{ accion }} Producto: {{ producto.nombre }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <hr>
+
+    <form method="post" action="{% url 'eliminar_producto' producto.pk %}" 
+        onsubmit="return confirm('¿Estás seguro de eliminar {{ producto.nombre }}?');">
+        {% csrf_token %}
+        <button type="submit" style="background:red; color:white;">🗑️ Eliminar Producto</button>
+    </form>
+
+    <br>
+
+    <a href="{% url 'home' %}" class="btn btn-primary">Home</a>
 </body>
 </html>

@@ -3,16 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Gestión de Productos</title>
+    <style>
+        .producto-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            text-decoration: none;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .alert {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
 </head>
 <body>
-    <h1>Bienvenido al apartado de registro</h1>
-    <h2>Aqui podras registrar los productos a vender con el:</h2>
-    <ul>
-        <li>nombre</li>
-        <li>codigo</li>
-        <li>stock</li>
-        <li>precio</li>
-    </ul>
+    <h1>Gestión de Productos</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Confirmación de eliminación -->
+    {% if producto_a_eliminar %}
+        <div class="alert alert-danger">
+            <h3>¿Estás seguro de que quieres eliminar el producto "{{ producto_a_eliminar.nombre }}"?</h3>
+            <form method="POST" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+            </form>
+            <a href="{% url 'registro' %}" class="btn btn-primary">Cancelar</a>
+        </div>
+    {% else %}
+        <!-- Formulario de registro/edición -->
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h2>
+                {% if producto_editando %}
+                    Editar Producto: {{ producto_editando.nombre }}
+                {% else %}
+                    Registrar Nuevo Producto
+                {% endif %}
+            </h2>
+            <p>Aquí puedes {% if producto_editando %}editar{% else %}registrar{% endif %} productos con nombre, código, stock y precio</p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">
+                    {% if producto_editando %}Actualizar{% else %}Registrar{% endif %}
+                </button>
+                {% if producto_editando %}
+                    <a href="{% url 'registro' %}" class="btn btn-primary">Cancelar Edición</a>
+                {% endif %}
+            </form>
+        </div>
+    {% endif %}
+
+    <!-- Lista de productos existentes -->
+    <div>
+        <h2>Productos Registrados</h2>
+        
+        <!-- Formulario de búsqueda -->
+        <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <form method="GET" style="display: flex; align-items: center; gap: 10px;">
+                <label for="buscar" style="font-weight: bold;">🔍 Buscar producto por nombre:</label>
+                <input type="text" id="buscar" name="buscar" value="{{ buscar }}" 
+                       placeholder="Escribe el nombre del producto..." 
+                       style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 3px; flex: 1; max-width: 300px;">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                {% if buscar %}
+                    <a href="{% url 'registro' %}" class="btn" style="background-color: #6c757d; color: white;">Limpiar</a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if buscar %}
+            <p><strong>Resultados para: "{{ buscar }}"</strong> ({{ productos.count }} producto{{ productos.count|pluralize }})</p>
+        {% endif %}
+        
+        {% if productos %}
+            {% for producto in productos %}
+                <div class="producto-item">
+                    <strong>{{ producto.nombre }}</strong> (Código: {{ producto.codigo }})
+                    <br>
+                    <span>Precio: ${{ producto.precio }} | Stock: {{ producto.stock }} unidades</span>
+                    <br>
+                    <div style="margin-top: 10px;">
+                        <a href="{% url 'registro_editar' producto.pk %}" class="btn btn-warning">Editar</a>
+                        <a href="{% url 'eliminar_producto' producto.pk %}" class="btn btn-danger">Eliminar</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            {% if buscar %}
+                <div class="alert alert-info" style="background-color: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 5px;">
+                    <p>No se encontraron productos que contengan "{{ buscar }}" en su nombre.</p>
+                    <p><a href="{% url 'registro' %}">Ver todos los productos</a></p>
+                </div>
+            {% else %}
+                <p>No hay productos registrados aún.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <br>
+    <div>
+        <h3>Navegación</h3>
+        <a href="{% url 'home' %}" class="btn btn-primary">Home</a>
+        <a href="{% url 'ventas' %}" class="btn btn-primary">Realizar Venta</a>
+        <a href="{% url 'clientes' %}" class="btn btn-primary">Clientes</a>
+    </div>
 </body>
 </html>

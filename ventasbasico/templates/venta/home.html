@@ -3,10 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Home</title>
+    <style>
+        .producto-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .btn {
+            padding: 8px 12px;
+            margin: 0 5px;
+            text-decoration: none;
+            border-radius: 3px;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .producto-info {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .producto-actions {
+            margin-top: 10px;
+        }
+        .navigation {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenido al apartado de ventas</h1>
+    <h1>Bienvenido al apartado de Home</h1>
     <h2>Aqui podras ver el listado de productos disponibles</h2>
+    <br>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding: 10px; margin: 10px 0; border-radius: 5px; background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <h1>Productos disponibles</h1>
+    
+    <!-- Formulario de búsqueda -->
+    <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <form method="GET" style="display: flex; align-items: center; gap: 10px;">
+            <label for="buscar" style="font-weight: bold;">🔍 Buscar producto por nombre:</label>
+            <input type="text" id="buscar" name="buscar" value="{{ buscar }}" 
+                   placeholder="Escribe el nombre del producto..." 
+                   style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 3px; flex: 1; max-width: 300px;">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            {% if buscar %}
+                <a href="{% url 'home' %}" class="btn" style="background-color: #6c757d; color: white;">Limpiar</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if buscar %}
+        <p><strong>Resultados para: "{{ buscar }}"</strong> ({{ productos.count }} producto{{ productos.count|pluralize }})</p>
+    {% endif %}
+    
+    {% if productos %}
+        {% for producto in productos %}
+        <div class="producto-item">
+            <div class="producto-info">
+                <strong>{{ producto.nombre }}</strong> (Código: {{ producto.codigo }})
+                <br>
+                <span>Precio: ${{ producto.precio }} | Stock: {{ producto.stock }} unidades</span>
+            </div>
+            <div class="producto-actions">
+                <a href="{% url 'registro_editar' producto.pk %}" class="btn btn-warning">✏️ Editar</a>
+                <a href="{% url 'eliminar_producto' producto.pk %}" class="btn btn-danger">🗑️ Eliminar</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        {% if buscar %}
+            <div style="background-color: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p><strong>No se encontraron productos que contengan "{{ buscar }}" en su nombre.</strong></p>
+                <p><a href="{% url 'home' %}" class="btn btn-primary">Ver todos los productos</a></p>
+            </div>
+        {% else %}
+            <p>No hay productos registrados aún.</p>
+            <p><a href="{% url 'registro' %}" class="btn btn-primary">Registrar el primer producto</a></p>
+        {% endif %}
+    {% endif %}
+
+    <div class="navigation">
+        <em>Links de Navegación</em><br><br>
+        <a href="{% url 'registro' %}" class="btn btn-primary">📝 Gestionar Productos</a>
+        <a href="{% url 'ventas' %}" class="btn btn-primary">💰 Realizar Venta</a>
+        <a href="{% url 'clientes' %}" class="btn btn-primary">👥 Clientes</a>
+    </div>
 </body>
 </html>
