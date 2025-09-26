@@ -4,47 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
     <div>
-        {% if messages %}
+        {% if messages %}<!-- Si el back end manda algun mensaje aparecera en el html aqui -->
             {% for message in messages %}
-                <div>{{ message }}</div>
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
     </div>
 
-    <h1>Clientes Habituales</h1>
+    <h1 class="text-center">Clientes Habituales</h1>
     
-    <p><a href="{% url 'registrar_cliente' %}">Registrar Nuevo Cliente</a></p>
+    <p><a href="{% url 'registrar_cliente' %}" class="btn btn-info m-3">Registrar Nuevo Cliente</a></p>
     
-    {% if clientes %}
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>RUT</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Email</th>
-                    <th>Comuna</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for cliente in clientes %}
-                    <tr>
-                        <td>{{ cliente.rut }}</td>
-                        <td>{{ cliente.nombre }}</td>
-                        <td>{{ cliente.apellido }}</td>
-                        <td>{{ cliente.email|default:"No registrado" }}</td>
-                        <td>{{ cliente.comuna }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No hay clientes registrados</p>
-    {% endif %}
-    
-    <p><a href="{% url 'home' %}">Volver al Home</a></p>
+    <div class="m-3">
+        {% if clientes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">RUT</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Apellido</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Comuna</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in clientes %}
+                            <tr>
+                                <td>{{ cliente.rut }}</td>
+                                <td>{{ cliente.nombre }}</td>
+                                <td>{{ cliente.apellido }}</td>
+                                <td>{{ cliente.email|default:"No registrado" }}</td>
+                                <td>{{ cliente.comuna }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                No hay clientes registrados
+            </div>
+        {% endif %}
+    </div>
+
+    <p><a href="{% url 'home' %}" class="btn btn-primary m-3">Volver al Home</a></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
 </body>
 </html>

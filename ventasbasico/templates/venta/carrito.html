@@ -4,39 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrito de Compras</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
     <div>
-        {% if messages %}
+        {% if messages %}<!-- Si el back end manda algun mensaje aparecera en el html aqui -->
             {% for message in messages %}
-                <div>{{ message }}</div>
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
     </div>
+    <h1 class="text-center" >Carrito de Compras</h1>
+    
+    <div class="m-3 card p-0.5">
+        {% if carrito %}
+            {% for producto_id, item in carrito.items %}
+                <div>
+                    <p>
+                        <strong>{{ item.nombre }}</strong>
+                        <br>
+                        Precio: ${{ item.precio }} | Cantidad: {{ item.cantidad }}
+                        <br>
+                        Subtotal: ${{ item.precio|floatformat:0 }}
+                        <a href="{% url 'eliminar_del_carrito' producto_id %}">Eliminar</a>
+                    </p>
+                </div>
+            {% endfor %}
+            
+            <h3>Total: ${{ total|floatformat:0 }}</h3>
+            
+            <a href="{% url 'venta' %}">Proceder a la Venta</a>
+        {% else %}
+            <p>El carrito está vacío</p>
+        {% endif %}
+    </div>
 
-    <h1>Carrito de Compras</h1>
-    
-    {% if carrito %}
-        {% for producto_id, item in carrito.items %}
-            <div>
-                <p>
-                    <strong>{{ item.nombre }}</strong>
-                    <br>
-                    Precio: ${{ item.precio }} | Cantidad: {{ item.cantidad }}
-                    <br>
-                    Subtotal: ${{ item.precio|floatformat:0 }}
-                    <a href="{% url 'eliminar_del_carrito' producto_id %}">Eliminar</a>
-                </p>
-            </div>
-        {% endfor %}
-        
-        <h3>Total: ${{ total|floatformat:0 }}</h3>
-        
-        <a href="{% url 'venta' %}">Proceder a la Venta</a>
-    {% else %}
-        <p>El carrito está vacío</p>
-    {% endif %}
-    
-    <p><a href="{% url 'home' %}">Seguir Comprando</a></p>
+
+    <p><a href="{% url 'home' %}" class="btn btn-primary m-3">Seguir Comprando</a></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
 </body>
 </html>

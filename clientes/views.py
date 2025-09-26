@@ -3,9 +3,6 @@ from django.contrib import messages
 from .models import Cliente
 
 # Create your views here.
-def clientes(request):
-    return render(request, 'clientes/clientes.html')
-
 def lista_clientes(request):
     clientes = Cliente.objects.all()
     return render(request, 'clientes/lista_clientes.html', {'clientes': clientes})

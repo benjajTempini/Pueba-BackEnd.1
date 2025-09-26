@@ -4,26 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realizar Venta</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
     <div>
-        {% if messages %}
+        {% if messages %}<!-- Si el back end manda algun mensaje aparecera en el html aqui -->
             {% for message in messages %}
-                <div>{{ message }}</div>
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-3" role="alert">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
     </div>
 
-    <h1>Realizar Venta</h1>
+    <h1 class="text-center">Realizar Venta</h1>
     
-    <h2>Resumen de la compra:</h2>
-    {% for producto_id, item in carrito.items %}
-        <p>{{ item.nombre }} - Cantidad: {{ item.cantidad }} - Subtotal: ${{ item.precio|floatformat:0 }}</p>
-    {% endfor %}
+    <div class="card m-3 p-1">
+        <h2>Resumen de la compra:</h2>
+        {% for producto_id, item in carrito.items %}
+            <p>{{ item.nombre }} - Cantidad: {{ item.cantidad }} - Subtotal: ${{ item.precio|floatformat:0 }}</p>
+        {% endfor %}
+        
+        <h3>Total: ${{ total|floatformat:0 }}</h3>
+    </div>
+
     
-    <h3>Total: ${{ total|floatformat:0 }}</h3>
-    
-    <form method="post">
+    <form method="post" class="m-3 card p-3">
         {% csrf_token %}
         
         <h3>Información del Cliente</h3>
@@ -46,7 +52,7 @@
                     {% endfor %}
                 </select>
             </p>
-            <p><a href="{% url 'registrar_cliente' %}" target="_blank">Registrar nuevo cliente habitual</a></p>
+            <p><a href="{% url 'registrar_cliente' %}" target="_blank" class="btn btn-link">Registrar nuevo cliente habitual</a></p>
         </div>
         
         <!-- Campo RUT (siempre visible) -->
@@ -55,8 +61,8 @@
             <input type="text" id="rut_cliente" name="rut_cliente" required placeholder="12345678-9">
         </p>
         
-        <button type="submit">Confirmar Venta</button>
-        <a href="{% url 'ver_carrito' %}">Volver al Carrito</a>
+        <button type="submit" class="btn btn-success m-2">Confirmar Venta</button>
+        <a href="{% url 'ver_carrito' %}" class="btn btn-secondary m-2">Volver al Carrito</a>
     </form>
 
     <script>
@@ -84,5 +90,8 @@
             }
         }
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
 </body>
 </html>

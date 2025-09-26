@@ -17,19 +17,21 @@
         {% endif %}
     </div>
 
-    <h1>Registro de Productos</h1>
-    <div class="m-3">
+    <h1 class="text-center" >Registro de Productos</h1>
+    <div class="m-3 card p-0.5">
         <form class="m-3" method="POST">
             {% csrf_token %}
-            {{ form.as_ul }}
-            <button type="submit">Registrar Producto</button>
+            {{ form.as_p }}
+            <button class="btn btn-success m-3" type="submit">Registrar Producto</button>
         </form>
     </div>
 
-    <div>
+    <div class="m-3">
         <p>Links de Navegación</p>
-        <a href="{% url 'home' %}">Pagina Principal</a>
+        <a href="{% url 'home' %}" class="btn btn-primary">Pagina Principal</a>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
 </body>
 </html>
