@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Productos</title>
+    <title>Eliminar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
 <body>
@@ -17,18 +17,15 @@
         {% endif %}
     </div>
 
-    <h1>Registro de Productos</h1>
-    <div class="m-3">
-        <form class="m-3" method="POST">
-            {% csrf_token %}
-            {{ form.as_ul }}
-            <button type="submit">Registrar Producto</button>
-        </form>
-    </div>
+    <h1>Eliminar Producto</h1>
 
-    <div>
-        <p>Links de Navegación</p>
-        <a href="{% url 'home' %}">Pagina Principal</a>
+    <h3>¿Eliminar el producto "{{ producto.nombre }}"?</h3>
+    <div >
+        <form method="POST" class="m-3">
+            {% csrf_token %}
+            <button type="submit">Sí, eliminar</button>
+            <a href="{% url 'home' %}">Cancelar</a>
+        </form>
     </div>
 
 </body>

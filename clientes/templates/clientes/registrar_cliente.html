@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Cliente</title>
+</head>
+<body>
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <div>{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <h1>Registrar Cliente Habitual</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <p>
+            <label for="rut">RUT:</label>
+            <input type="text" id="rut" name="rut" required placeholder="12345678-9">
+        </p>
+        
+        <p>
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required>
+        </p>
+        
+        <p>
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" name="apellido" required>
+        </p>
+        
+        <p>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="cliente@email.com">
+        </p>
+        
+        <p>
+            <label for="comuna">Comuna:</label>
+            <input type="text" id="comuna" name="comuna" required>
+        </p>
+        
+        <p>
+            <button type="submit">Registrar Cliente</button>
+            <a href="{% url 'lista_clientes' %}">Volver a Lista</a>
+        </p>
+    </form>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+</head>
+<body>
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <div>{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <h1>Carrito de Compras</h1>
+    
+    {% if carrito %}
+        {% for producto_id, item in carrito.items %}
+            <div>
+                <p>
+                    <strong>{{ item.nombre }}</strong>
+                    <br>
+                    Precio: ${{ item.precio }} | Cantidad: {{ item.cantidad }}
+                    <br>
+                    Subtotal: ${{ item.precio|floatformat:0 }}
+                    <a href="{% url 'eliminar_del_carrito' producto_id %}">Eliminar</a>
+                </p>
+            </div>
+        {% endfor %}
+        
+        <h3>Total: ${{ total|floatformat:0 }}</h3>
+        
+        <a href="{% url 'venta' %}">Proceder a la Venta</a>
+    {% else %}
+        <p>El carrito está vacío</p>
+    {% endif %}
+    
+    <p><a href="{% url 'home' %}">Seguir Comprando</a></p>
+</body>
+</html>

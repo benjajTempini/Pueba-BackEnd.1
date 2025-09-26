@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Clientes</title>
+</head>
+<body>
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <div>{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <h1>Clientes Habituales</h1>
+    
+    <p><a href="{% url 'registrar_cliente' %}">Registrar Nuevo Cliente</a></p>
+    
+    {% if clientes %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>RUT</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Email</th>
+                    <th>Comuna</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.rut }}</td>
+                        <td>{{ cliente.nombre }}</td>
+                        <td>{{ cliente.apellido }}</td>
+                        <td>{{ cliente.email|default:"No registrado" }}</td>
+                        <td>{{ cliente.comuna }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay clientes registrados</p>
+    {% endif %}
+    
+    <p><a href="{% url 'home' %}">Volver al Home</a></p>
+</body>
+</html>

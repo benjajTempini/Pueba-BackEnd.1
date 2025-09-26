@@ -3,12 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Realizar Venta</title>
 </head>
 <body>
-    <h1>Bienvenido al apartado de ventas</h1>
-    <h2>Aqui podras ver como seria un carrito de compra para poder registrar la venta</h2>
+    <div>
+        {% if messages %}
+            {% for message in messages %}
+                <div>{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-    <a href="{% url 'home' %}" class="btn btn-primary">Home</a>
+    <h1>Realizar Venta</h1>
+    
+    <h2>Resumen de la compra:</h2>
+    {% for producto_id, item in carrito.items %}
+        <p>{{ item.nombre }} - Cantidad: {{ item.cantidad }} - Subtotal: ${{ item.precio|floatformat:0 }}</p>
+    {% endfor %}
+    
+    <h3>Total: ${{ total|floatformat:0 }}</h3>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <h3>Información del Cliente</h3>
+        
+        <p>
+            <input type="checkbox" id="es_cliente_habitual" name="es_cliente_habitual" onchange="toggleClienteHabitual()">
+            <label for="es_cliente_habitual">¿Es cliente habitual?</label>
+        </p>
+        
+        <!-- Sección para cliente habitual -->
+        <div id="cliente_habitual_section" style="display: none;">
+            <p>
+                <label for="cliente_select">Seleccionar Cliente Habitual:</label>
+                <select id="cliente_select" name="rut_cliente_select" onchange="fillRutFromSelect()">
+                    <option value="">-- Seleccionar Cliente --</option>
+                    {% for cliente in clientes %}
+                        <option value="{{ cliente.rut }}" data-nombre="{{ cliente.nombre }} {{ cliente.apellido }}">
+                            {{ cliente.rut }} - {{ cliente.nombre }} {{ cliente.apellido }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p><a href="{% url 'registrar_cliente' %}" target="_blank">Registrar nuevo cliente habitual</a></p>
+        </div>
+        
+        <!-- Campo RUT (siempre visible) -->
+        <p>
+            <label for="rut_cliente">RUT del Cliente:</label>
+            <input type="text" id="rut_cliente" name="rut_cliente" required placeholder="12345678-9">
+        </p>
+        
+        <button type="submit">Confirmar Venta</button>
+        <a href="{% url 'ver_carrito' %}">Volver al Carrito</a>
+    </form>
+
+    <script>
+        function toggleClienteHabitual() {
+            const checkbox = document.getElementById('es_cliente_habitual');
+            const section = document.getElementById('cliente_habitual_section');
+            const rutInput = document.getElementById('rut_cliente');
+            const clienteSelect = document.getElementById('cliente_select');
+            
+            if (checkbox.checked) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+                clienteSelect.value = '';
+                rutInput.value = '';
+            }
+        }
+        
+        function fillRutFromSelect() {
+            const select = document.getElementById('cliente_select');
+            const rutInput = document.getElementById('rut_cliente');
+            
+            if (select.value) {
+                rutInput.value = select.value;
+            }
+        }
+    </script>
 </body>
 </html>
