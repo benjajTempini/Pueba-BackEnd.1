@@ -1,8 +1,61 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.db import transaction
+from datetime import date
 from ventasbasico import forms
 from . import models
 from clientes.models import Cliente
+
+def historial_ventas(request):
+    """Vista para mostrar el historial de ventas"""
+    ventas = models.Venta.objects.all().order_by('-fecha', '-id')
+    
+    # Filtro por fecha si se proporciona
+    fecha_filtro = request.GET.get('fecha')
+    if fecha_filtro:
+        ventas = ventas.filter(fecha=fecha_filtro)
+    
+    # Filtro por cliente si se proporciona
+    cliente_filtro = request.GET.get('cliente')
+    if cliente_filtro:
+        ventas = ventas.filter(rut_cliente__rut__icontains=cliente_filtro)
+    
+    return render(request, 'venta/historial.html', {
+        'ventas': ventas,
+        'fecha_filtro': fecha_filtro,
+        'cliente_filtro': cliente_filtro
+    })
+
+def detalle_venta(request, venta_id):
+    """Vista para mostrar el detalle de una venta específica"""
+    venta = get_object_or_404(models.Venta, id=venta_id)
+    detalles = models.DetalleVenta.objects.filter(venta=venta)
+    
+    return render(request, 'venta/detalle_venta.html', {
+        'venta': venta,
+        'detalles': detalles
+    })
+
+def generar_numero_venta():
+    """Genera un número único para la venta"""
+    from datetime import datetime
+    
+    # Obtener fecha actual
+    fecha_actual = datetime.now()
+    prefijo = fecha_actual.strftime("%Y%m%d")
+    
+    # Contar ventas del día actual
+    ventas_hoy = models.Venta.objects.filter(fecha=date.today()).count()
+    
+    # Generar número consecutivo
+    numero = f"{prefijo}-{ventas_hoy + 1:04d}"
+    
+    # Verificar si existe, si existe incrementar
+    while models.Venta.objects.filter(numero=numero).exists():
+        ventas_hoy += 1
+        numero = f"{prefijo}-{ventas_hoy + 1:04d}"
+    
+    return numero
 
 def home(request):
     #Consulta todos los productos de la base de datos
@@ -145,46 +198,78 @@ def venta(request):
         try:
             cliente_info = None
             
-            # Si es cliente habitual, verificar que existe
-            if es_cliente_habitual:
-                try:
-                    cliente_info = Cliente.objects.get(rut=rut_cliente)
-                    messages.info(request, f"Cliente habitual: {cliente_info.nombre} {cliente_info.apellido}")
-                except Cliente.DoesNotExist:
-                    messages.error(request, f"El RUT {rut_cliente} no está registrado como cliente habitual")
-                    return render(request, 'venta/venta.html', {
-                        'carrito': carrito, 
-                        'total': total, 
-                        'clientes': clientes
-                    })
-            
-            # Procesar cada item del carrito
-            for producto_id, item in carrito.items():
-                producto = models.Productos.objects.get(id=producto_id)
+            # Usar transacción para garantizar consistencia de datos
+            with transaction.atomic():
+                cliente_obj = None
                 
-                # Verificar stock nuevamente
-                if producto.stock < item['cantidad']:
-                    messages.error(request, f"Stock insuficiente para {producto.nombre}")
-                    return render(request, 'venta/venta.html', {
-                        'carrito': carrito, 
-                        'total': total, 
-                        'clientes': clientes
-                    })
+                # Si es cliente habitual, verificar que existe
+                if es_cliente_habitual:
+                    try:
+                        cliente_obj = Cliente.objects.get(rut=rut_cliente)
+                        messages.info(request, f"Cliente habitual: {cliente_obj.nombre} {cliente_obj.apellido}")
+                    except Cliente.DoesNotExist:
+                        messages.error(request, f"El RUT {rut_cliente} no está registrado como cliente habitual")
+                        return render(request, 'venta/venta.html', {
+                            'carrito': carrito, 
+                            'total': total, 
+                            'clientes': clientes
+                        })
+                else:
+                    # Para clientes no habituales, crear o buscar cliente temporal
+                    cliente_obj, created = Cliente.objects.get_or_create(
+                        rut=rut_cliente,
+                        defaults={
+                            'nombre': 'Cliente',
+                            'apellido': 'Temporal',
+                            'comuna': 'No especificada'
+                        }
+                    )
                 
-                # Reducir stock
-                producto.stock -= item['cantidad']
-                producto.save()
-            
-            # Limpiar carrito
-            request.session['carrito'] = {}
-            request.session.modified = True
-            
-            if cliente_info:
-                messages.success(request, f"Venta realizada exitosamente al cliente habitual: {cliente_info.nombre} {cliente_info.apellido}")
-            else:
-                messages.success(request, f"Venta realizada exitosamente al cliente RUT: {rut_cliente}")
-            
-            return redirect('home')
+                # Verificar stock antes de procesar
+                for producto_id, item in carrito.items():
+                    producto = models.Productos.objects.get(id=producto_id)
+                    if producto.stock < item['cantidad']:
+                        messages.error(request, f"Stock insuficiente para {producto.nombre}")
+                        return render(request, 'venta/venta.html', {
+                            'carrito': carrito, 
+                            'total': total, 
+                            'clientes': clientes
+                        })
+                
+                # Crear la venta
+                numero_venta = generar_numero_venta()
+                venta = models.Venta.objects.create(
+                    numero=numero_venta,
+                    rut_cliente=cliente_obj,
+                    total=total
+                )
+                
+                # Crear los detalles de venta y actualizar stock
+                for producto_id, item in carrito.items():
+                    producto = models.Productos.objects.get(id=producto_id)
+                    
+                    # Crear detalle de venta
+                    models.DetalleVenta.objects.create(
+                        venta=venta,
+                        producto=producto,
+                        cantidad=item['cantidad'],
+                        precio_unitario=item['precio']
+                    )
+                    
+                    # Reducir stock
+                    producto.stock -= item['cantidad']
+                    producto.save()
+                
+                # Limpiar carrito
+                request.session['carrito'] = {}
+                request.session.modified = True
+                
+                if es_cliente_habitual:
+                    messages.success(request, f"Venta #{numero_venta} realizada exitosamente al cliente habitual: {cliente_obj.nombre} {cliente_obj.apellido}")
+                else:
+                    messages.success(request, f"Venta #{numero_venta} realizada exitosamente al cliente RUT: {rut_cliente}")
+                
+                return redirect('home')
             
         except Exception as e:
             messages.error(request, f"Error al procesar la venta: {str(e)}")
@@ -194,3 +279,24 @@ def venta(request):
         'total': total,
         'clientes': clientes
     })
+
+def generar_numero_venta():
+    """Genera un número único para la venta"""
+    from datetime import datetime
+    
+    # Obtener fecha actual
+    fecha_actual = datetime.now()
+    prefijo = fecha_actual.strftime("%Y%m%d")
+    
+    # Contar ventas del día actual
+    ventas_hoy = models.Venta.objects.filter(fecha=date.today()).count()
+    
+    # Generar número consecutivo
+    numero = f"{prefijo}-{ventas_hoy + 1:04d}"
+    
+    # Verificar si existe, si existe incrementar
+    while models.Venta.objects.filter(numero=numero).exists():
+        ventas_hoy += 1
+        numero = f"{prefijo}-{ventas_hoy + 1:04d}"
+    
+    return numero

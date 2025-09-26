@@ -19,20 +19,21 @@
 
     <h1 class="text-center">Productos disponibles</h1>
     {% if productos %}
-        {% for producto in productos %}
+        {% for producto in productos %} <!-- recorre la lista de productos para que aparezcan todos los que estan en la base de datos -->
             <div class="m-3 card p-3">
                 <p>
+                    <!-- aqui se da la estructura que tendra -->
                     <strong>{{ producto.nombre }}</strong> (Código: {{ producto.codigo }})
                     <br>
                     Precio: ${{ producto.precio }} | Stock: {{ producto.stock }} unidades
                     <a href="{% url 'editar' producto.pk %}">Editar</a>
                     <a href="{% url 'eliminar' producto.pk %}">Eliminar</a>
 
-                    {% if producto.stock > 0 %}
+                    {% if producto.stock > 0 %} <!-- verifica si hay o no stock -->
                         <form method="post" action="{% url 'agregar_carrito' %}" style="display: inline;">
                             {% csrf_token %}
-                            <input type="hidden" name="producto_id" value="{{ producto.id }}">
-                            <input type="number" name="cantidad" min="1" max="{{ producto.stock }}" value="1" style="width: 60px;">
+                            <input type="hidden" name="producto_id" value="{{ producto.id }}"> <!-- si hay devuelve el id del producto -->
+                            <input type="number" name="cantidad" min="1" max="{{ producto.stock }}" value="1" style="width: 60px;"> <!-- aqui le resta una unidad al stock del producto selecionado para poder agregarlo al carrito -->
                             <button type="submit">Agregar al Carrito</button>
                         </form>
                     {% else %}
@@ -42,16 +43,17 @@
             </div>
             
         {% endfor %}
-    {% else %}
+    {% else %} <!-- si no hay productos -->
         <p>No hay productos disponibles.</p>
     {% endif %}
 
 
-    <div class="m-3">
-        <p>Links de Navegación</p>
+    <div class="m-3"> <!-- Links de Navegación para que sea mas facil navegar en la app -->
+        <p>Links de Navegación</p> 
         <a href="{% url 'registro' %}" class="btn btn-primary">Registrar Producto</a>
         <a href="{% url 'ver_carrito' %}" class="btn btn-secondary">Ver Carrito</a>
         <a href="{% url 'venta' %}" class="btn btn-success">Realizar Venta</a>
+        <a href="{% url 'historial_ventas' %}" class="btn btn-dark">Historial de Ventas</a>
         <br><br>
         <p>Gestión de Clientes</p>
         <a href="{% url 'lista_clientes' %}" class="btn btn-info">Ver Clientes Habituales</a>

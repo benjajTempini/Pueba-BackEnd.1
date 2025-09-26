@@ -18,8 +18,8 @@
     </div>
     <h1 class="text-center" >Carrito de Compras</h1>
     
-    <div class="m-3 card p-0.5">
-        {% if carrito %}
+    <div class="m-3 card p-1">
+        {% if carrito %} 
             {% for producto_id, item in carrito.items %}
                 <div>
                     <p>
@@ -35,7 +35,7 @@
             
             <h3>Total: ${{ total|floatformat:0 }}</h3>
             
-            <a href="{% url 'venta' %}">Proceder a la Venta</a>
+            <a href="{% url 'venta' %}" class="btn btn-success p-1 m-3">Proceder a la Venta</a>
         {% else %}
             <p>El carrito está vacío</p>
         {% endif %}
