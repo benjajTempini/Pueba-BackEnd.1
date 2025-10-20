@@ -1,10 +1,13 @@
 from django.contrib import admin
 from .models import Productos, Venta, DetalleVenta
+from django.http import HttpResponse
+import csv
+
 
 @admin.register(Productos)
 class ProductosAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'codigo', 'precio', 'stock')
-    list_filter = ('precio', 'stock')
+    list_filter = ('nombre','precio', 'stock')
     search_fields = ('nombre', 'codigo')
     ordering = ('nombre',)
 
@@ -29,3 +32,13 @@ class VentaAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Evitar que se puedan eliminar ventas desde el admin
         return False
+    
+
+
+    
+#@admin.action(description="EXPORTAR VENTA DE PRODCUTOS A CSV")
+#def exportar_productos_csv(modelAdmin,request,queryset):
+#    response = HttpResponse(content_type='text/csv')
+#    response['Content-Disposicion'] = 'attachment; filename="productos.csv"'
+#    archivo = csv.writer(response)
+#    archivo.writerow(['nombre','precio','stock','activo'])
