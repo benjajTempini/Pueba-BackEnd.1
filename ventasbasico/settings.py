@@ -9,10 +9,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-g)eq56g!owt8@3!c6s-rm!eao35ur^prev*9m-ihf9)=v27h16')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Configuración de ALLOWED_HOSTS para producción
 ALLOWED_HOSTS = [
@@ -69,15 +69,14 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Usar DATABASE_URL si existe (Render), sino usar variables individuales
-DATABASE_URL = os.getenv("DATABASE_URL")
-
 DATABASES = {
-    "default": dj_database_url.config(
-        default=DATABASE_URL,
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),  # tu env DATABASE_URL
         conn_max_age=600,
         ssl_require=True
     )
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
