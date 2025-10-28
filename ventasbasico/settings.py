@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
+        'NAME': os.getenv('DB_NAME', 'postgres'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
@@ -85,6 +85,7 @@ DATABASES = {
         'CONN_MAX_AGE': 600,  # Mantener conexiones abiertas por 10 minutos
         'OPTIONS': {
             'connect_timeout': 10,
+            'sslmode': os.getenv('PGSSLMODE', 'prefer'),  # Para Supabase
         }
     }
 }
