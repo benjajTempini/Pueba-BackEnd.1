@@ -76,20 +76,20 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,  # 🔒 Requerido por Supabase
+            ssl_require=True,  # 🔒 IMPORTANTE
         )
     }
 else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
+            'NAME': os.getenv('DB_NAME', 'postgres'),
             'USER': os.getenv('DB_USER'),
             'PASSWORD': os.getenv('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST'),
             'PORT': os.getenv('DB_PORT', '6543'),
             'OPTIONS': {
-                'sslmode': 'require',  # 👈 Agrega esta línea si usas variables separadas
+                'sslmode': 'require',  # 👈 sin esto no conecta
             }
         }
     }
