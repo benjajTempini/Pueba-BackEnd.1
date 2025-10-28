@@ -1,45 +1,16 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
-from datetime import date
+from datetime import date, datetime
 from ventasbasico import forms
 from . import models
 from clientes.models import Cliente
+import logging
 
-def historial_ventas(request):
-    """Vista para mostrar el historial de ventas"""
-    ventas = models.Venta.objects.all().order_by('-fecha', '-id')
-    
-    # Filtro por fecha si se proporciona
-    fecha_filtro = request.GET.get('fecha')
-    if fecha_filtro:
-        ventas = ventas.filter(fecha=fecha_filtro)
-    
-    # Filtro por cliente si se proporciona
-    cliente_filtro = request.GET.get('cliente')
-    if cliente_filtro:
-        ventas = ventas.filter(rut_cliente__rut__icontains=cliente_filtro)
-    
-    return render(request, 'venta/historial.html', {
-        'ventas': ventas,
-        'fecha_filtro': fecha_filtro,
-        'cliente_filtro': cliente_filtro
-    })
-
-def detalle_venta(request, venta_id):
-    """Vista para mostrar el detalle de una venta específica"""
-    venta = get_object_or_404(models.Venta, id=venta_id)
-    detalles = models.DetalleVenta.objects.filter(venta=venta)
-    
-    return render(request, 'venta/detalle_venta.html', {
-        'venta': venta,
-        'detalles': detalles
-    })
+logger = logging.getLogger(__name__)
 
 def generar_numero_venta():
     """Genera un número único para la venta"""
-    from datetime import datetime
-    
     # Obtener fecha actual
     fecha_actual = datetime.now()
     prefijo = fecha_actual.strftime("%Y%m%d")
@@ -47,21 +18,67 @@ def generar_numero_venta():
     # Contar ventas del día actual
     ventas_hoy = models.Venta.objects.filter(fecha=date.today()).count()
     
-    # Generar número consecutivo
-    numero = f"{prefijo}-{ventas_hoy + 1:04d}"
+    # Generar número consecutivo (máximo 10 intentos para evitar loops infinitos)
+    max_intentos = 10
+    for i in range(max_intentos):
+        numero = f"{prefijo}-{ventas_hoy + i + 1:04d}"
+        if not models.Venta.objects.filter(numero=numero).exists():
+            return numero
     
-    # Verificar si existe, si existe incrementar
-    while models.Venta.objects.filter(numero=numero).exists():
-        ventas_hoy += 1
-        numero = f"{prefijo}-{ventas_hoy + 1:04d}"
-    
-    return numero
+    # Si después de 10 intentos no se encontró número, usar timestamp
+    return f"{prefijo}-{int(datetime.now().timestamp())}"
+
+def historial_ventas(request):
+    """Vista para mostrar el historial de ventas"""
+    try:
+        ventas = models.Venta.objects.all().order_by('-fecha', '-id')
+        
+        # Filtro por fecha si se proporciona
+        fecha_filtro = request.GET.get('fecha')
+        if fecha_filtro:
+            ventas = ventas.filter(fecha=fecha_filtro)
+        
+        # Filtro por cliente si se proporciona
+        cliente_filtro = request.GET.get('cliente')
+        if cliente_filtro:
+            ventas = ventas.filter(rut_cliente__rut__icontains=cliente_filtro)
+        
+        return render(request, 'venta/historial.html', {
+            'ventas': ventas,
+            'fecha_filtro': fecha_filtro,
+            'cliente_filtro': cliente_filtro
+        })
+    except Exception as e:
+        logger.error(f"Error en historial_ventas: {str(e)}")
+        messages.error(request, "Error al cargar el historial de ventas")
+        return redirect('home')
+
+def detalle_venta(request, venta_id):
+    """Vista para mostrar el detalle de una venta específica"""
+    try:
+        venta = get_object_or_404(models.Venta, id=venta_id)
+        detalles = models.DetalleVenta.objects.filter(venta=venta)
+        
+        return render(request, 'venta/detalle_venta.html', {
+            'venta': venta,
+            'detalles': detalles
+        })
+    except Exception as e:
+        logger.error(f"Error en detalle_venta: {str(e)}")
+        messages.error(request, "Error al cargar el detalle de la venta")
+        return redirect('historial_ventas')
 
 def home(request):
-    #Consulta todos los productos de la base de datos
-    productos = models.Productos.objects.all()
-    #Redirecciona al home.html y envia la lista de los productos que estan en la base de datos 
-    return render(request,'venta/home.html', {'productos': productos})
+    """Página principal con lista de productos"""
+    try:
+        # Consulta todos los productos de la base de datos
+        productos = models.Productos.objects.all()
+        return render(request, 'venta/home.html', {'productos': productos})
+    except Exception as e:
+        logger.error(f"Error en home: {str(e)}")
+        # Si hay error con la BD, mostrar página sin productos
+        messages.error(request, "Error al cargar productos")
+        return render(request, 'venta/home.html', {'productos': []})
 
 def registro(request):
     if request.method == 'POST': # seleccionamos el metodo post para poder ingresar datos a la BD
@@ -279,24 +296,3 @@ def venta(request):
         'total': total,
         'clientes': clientes
     })
-
-def generar_numero_venta():
-    """Genera un número único para la venta"""
-    from datetime import datetime
-    
-    # Obtener fecha actual
-    fecha_actual = datetime.now()
-    prefijo = fecha_actual.strftime("%Y%m%d")
-    
-    # Contar ventas del día actual
-    ventas_hoy = models.Venta.objects.filter(fecha=date.today()).count()
-    
-    # Generar número consecutivo
-    numero = f"{prefijo}-{ventas_hoy + 1:04d}"
-    
-    # Verificar si existe, si existe incrementar
-    while models.Venta.objects.filter(numero=numero).exists():
-        ventas_hoy += 1
-        numero = f"{prefijo}-{ventas_hoy + 1:04d}"
-    
-    return numero
