@@ -15,12 +15,11 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-g)eq56g!owt8@3!c6s-rm!eao3
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Configuración de ALLOWED_HOSTS para producción
-RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME, 'localhost', '127.0.0.1']
-else:
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
+ALLOWED_HOSTS = [
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
 # Application definition
 
@@ -70,49 +69,14 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Usar DATABASE_URL si existe (Render), sino usar variables individuales
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    # Parsear la URL manualmente para manejar caracteres especiales en la contraseña
-    try:
-        parsed = urlparse(DATABASE_URL)
-        # Extraer componentes
-        scheme = parsed.scheme
-        username = parsed.username
-        password = quote_plus(parsed.password) if parsed.password else None
-        hostname = parsed.hostname
-        port = parsed.port
-        database = parsed.path.lstrip('/')
-        
-        # Reconstruir la URL con la contraseña codificada
-        if password:
-            DATABASE_URL_FIXED = f"{scheme}://{username}:{password}@{hostname}:{port}/{database}"
-        else:
-            DATABASE_URL_FIXED = DATABASE_URL
-        
-        DATABASES = {
-            'default': dj_database_url.parse(
-                DATABASE_URL_FIXED,
-                conn_max_age=600,
-                conn_health_checks=True,
-                ssl_require=True
-            )
-        }
-    except Exception as e:
-        # Si falla el parsing, intentar usar la URL tal cual
-        print(f"Error parsing DATABASE_URL: {e}")
-        DATABASES = {
-            'default': dj_database_url.parse(DATABASE_URL)
-        }
-else:
-    DATABASES = {
+DATABASES = {
         'default': {
             'ENGINE': "django.db.backends.postgresql",
             'NAME': os.getenv("DB_NAME"),
             'USER': os.getenv("DB_USER"),
             'PASSWORD': os.getenv("DB_PASSWORD"), 
             'HOST': os.getenv("DB_HOST"),
-            'PORT': os.getenv("DB_PORT"),
+            'PORT': os.getenv("DB_PORT","6543"),
         }
     }
 
