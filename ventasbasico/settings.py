@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+from urllib.parse import urlparse, quote_plus
 load_dotenv()
 
 
@@ -72,15 +73,37 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
-    # Configurar con manejo de SSL y caracteres especiales
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True
-        )
-    }
+    # Parsear la URL manualmente para manejar caracteres especiales en la contraseña
+    try:
+        parsed = urlparse(DATABASE_URL)
+        # Extraer componentes
+        scheme = parsed.scheme
+        username = parsed.username
+        password = quote_plus(parsed.password) if parsed.password else None
+        hostname = parsed.hostname
+        port = parsed.port
+        database = parsed.path.lstrip('/')
+        
+        # Reconstruir la URL con la contraseña codificada
+        if password:
+            DATABASE_URL_FIXED = f"{scheme}://{username}:{password}@{hostname}:{port}/{database}"
+        else:
+            DATABASE_URL_FIXED = DATABASE_URL
+        
+        DATABASES = {
+            'default': dj_database_url.parse(
+                DATABASE_URL_FIXED,
+                conn_max_age=600,
+                conn_health_checks=True,
+                ssl_require=True
+            )
+        }
+    except Exception as e:
+        # Si falla el parsing, intentar usar la URL tal cual
+        print(f"Error parsing DATABASE_URL: {e}")
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL)
+        }
 else:
     DATABASES = {
         'default': {
