@@ -213,3 +213,13 @@ staticfiles/
 .idea/
 *.swp
 *.swo
+
+# Database project files
+*.sqbpro
+
+# Deployment files
+render.yaml
+build.sh
+RENDER*.md
+DEPLOYMENT*.md
+ACCESOS*.md
