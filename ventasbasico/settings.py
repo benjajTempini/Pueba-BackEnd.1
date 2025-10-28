@@ -2,27 +2,30 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-from urllib.parse import urlparse, quote_plus
+
+# Cargar variables de entorno
 load_dotenv()
 
-
+# ----------------------
+# Rutas base
+# ----------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# ----------------------
+# Seguridad
+# ----------------------
 SECRET_KEY = os.getenv('SECRET_KEY')
-
-
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# Configuración de ALLOWED_HOSTS para producción
 ALLOWED_HOSTS = [
     ".onrender.com",
     "localhost",
     "127.0.0.1"
 ]
 
-# Application definition
-
+# ----------------------
+# Apps instaladas
+# ----------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,9 +37,12 @@ INSTALLED_APPS = [
     'ventasbasico',
 ]
 
+# ----------------------
+# Middleware
+# ----------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise para servir archivos estáticos
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,74 +70,58 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# Usar DATABASE_URL si existe (Render), sino usar variables individuales
+# ----------------------
+# Base de datos
+# ----------------------
+# Usar DATABASE_URL si existe (Render + Supabase Transaction Pooler)
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),  # tu env DATABASE_URL
+        default=os.getenv('DATABASE_URL'),  # ejemplo: postgresql://usuario:pass@host:6543/dbname?sslmode=require
         conn_max_age=600,
         ssl_require=True
     )
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# ----------------------
+# Validación de contraseñas
+# ----------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# ----------------------
+# Internacionalización
+# ----------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# ----------------------
+# Archivos estáticos
+# ----------------------
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Whitenoise settings - Usar versión más simple para evitar problemas
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
+# ----------------------
+# Predeterminado para claves primarias
+# ----------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging para debug en producción
+# ----------------------
+# Logging
+# ----------------------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
+        'console': {'class': 'logging.StreamHandler'},
     },
     'root': {
         'handlers': ['console'],
@@ -139,12 +129,11 @@ LOGGING = {
     },
 }
 
-# Configuración de seguridad para producción
+# ----------------------
+# Seguridad adicional en producción
+# ----------------------
 if not DEBUG:
-    # Render maneja SSL automáticamente, no necesitamos forzar redirect
-    # SECURE_SSL_REDIRECT = True  # Comentado para Render
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    # X_FRAME_OPTIONS = 'DENY'  # Puede causar problemas con admin
