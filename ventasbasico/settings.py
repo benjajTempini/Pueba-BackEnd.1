@@ -3,7 +3,9 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
+# ----------------------
 # Cargar variables de entorno
+# ----------------------
 load_dotenv()
 
 # ----------------------
@@ -14,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ----------------------
 # Seguridad
 # ----------------------
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-secret')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = [
@@ -71,16 +73,36 @@ TEMPLATES = [
 WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 
 # ----------------------
-# Base de datos
+# Base de datos Supabase
 # ----------------------
-# Usar DATABASE_URL si existe (Render + Supabase Transaction Pooler)
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),  # ejemplo: postgresql://usuario:pass@host:6543/dbname?sslmode=require
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# Si DATABASE_URL no está en .env, usar variables individuales
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # Forzar puerto 6543 y sslmode=require si no están
+    if '?sslmode=' not in DATABASE_URL:
+        DATABASE_URL += '?sslmode=require'
+    if ':' not in DATABASE_URL.split('@')[1]:
+        # Añadir puerto 6543 si no está
+        parts = DATABASE_URL.split('@')
+        host_db = parts[1].split('/')
+        DATABASE_URL = f"{parts[0]}@{host_db[0]}:6543/{host_db[1]}?sslmode=require"
+
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+    }
+else:
+    # Variables individuales como fallback
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('NAME'),
+            'USER': os.getenv('USER'),
+            'PASSWORD': os.getenv('PASSWORD'),
+            'HOST': os.getenv('HOST'),
+            'PORT': os.getenv('DB_PORT', '6543'),
+        }
+    }
 
 # ----------------------
 # Validación de contraseñas
