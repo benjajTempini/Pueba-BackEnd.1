@@ -1,33 +1,34 @@
+"""
+Django settings for ventasbasico project.
+"""
+
 from pathlib import Path
 import os
-import dj_database_url
 from dotenv import load_dotenv
 
-# ----------------------
-# Cargar variables de entorno
-# ----------------------
+# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
-# ----------------------
-# Rutas base
-# ----------------------
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ----------------------
-# Seguridad
-# ----------------------
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-secret')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-a!)1(l*2=!gtiys$g6i^4p4d9b%60z^el0v$)0&6%d1nyr&kd#')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
 
 ALLOWED_HOSTS = [
     ".onrender.com",
-    "localhost",
-    "127.0.0.1"
+    "127.0.0.1",
+    "localhost"
 ]
 
-# ----------------------
-# Apps instaladas
-# ----------------------
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -39,9 +40,6 @@ INSTALLED_APPS = [
     'ventasbasico',
 ]
 
-# ----------------------
-# Middleware
-# ----------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -72,90 +70,62 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 
-# ----------------------
-# Base de datos Supabase
-# ----------------------
-# Si DATABASE_URL no está en .env, usar variables individuales
-DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
-    # Forzar puerto 6543 y sslmode=require si no están
-    if '?sslmode=' not in DATABASE_URL:
-        DATABASE_URL += '?sslmode=require'
-    if ':' not in DATABASE_URL.split('@')[1]:
-        # Añadir puerto 6543 si no está
-        parts = DATABASE_URL.split('@')
-        host_db = parts[1].split('/')
-        DATABASE_URL = f"{parts[0]}@{host_db[0]}:6543/{host_db[1]}?sslmode=require"
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=True)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT', '6543'),
     }
-else:
-    # Variables individuales como fallback
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('NAME'),
-            'USER': os.getenv('USER'),
-            'PASSWORD': os.getenv('PASSWORD'),
-            'HOST': os.getenv('HOST'),
-            'PORT': os.getenv('DB_PORT', '6543'),
-        }
-    }
-
-# ----------------------
-# Validación de contraseñas
-# ----------------------
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-# ----------------------
-# Internacionalización
-# ----------------------
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-# ----------------------
-# Archivos estáticos
-# ----------------------
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
-# ----------------------
-# Predeterminado para claves primarias
-# ----------------------
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# ----------------------
-# Logging
-# ----------------------
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler'},
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
 }
 
-# ----------------------
-# Seguridad adicional en producción
-# ----------------------
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+STATIC_URL = '/static/'
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
