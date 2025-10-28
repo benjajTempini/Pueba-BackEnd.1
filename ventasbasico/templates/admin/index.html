@@ -1,0 +1,31 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+    {{ block.super }}
+    
+    <div class="module" style="margin-top: 20px;">
+        <table style="width: 100%;">
+            <caption>
+                <div class="text">
+                    <h2>📊 Reportes y Estadísticas</h2>
+                </div>
+            </caption>
+            <tbody>
+                <tr class="model-venta">
+                    <th scope="row">
+                        <a href="{% url 'admin:reporte-ventas' %}" style="text-decoration: none;">
+                            📈 Reporte de Ventas por Fecha
+                        </a>
+                    </th>
+                    <td style="padding: 10px;">
+                        <a href="{% url 'admin:reporte-ventas' %}" class="viewlink" 
+                           style="background-color: #28a745; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: bold;">
+                            Ver Reporte
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

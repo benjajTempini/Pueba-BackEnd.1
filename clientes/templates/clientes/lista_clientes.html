@@ -32,6 +32,7 @@
                             <th scope="col">Apellido</th>
                             <th scope="col">Email</th>
                             <th scope="col">Comuna</th>
+                            <th scope="col">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,6 +43,14 @@
                                 <td>{{ cliente.apellido }}</td>
                                 <td>{{ cliente.email|default:"No registrado" }}</td>
                                 <td>{{ cliente.comuna }}</td>
+                                <td>
+                                    <a href="{% url 'editar_cliente' cliente.rut %}" class="btn btn-warning btn-sm">
+                                        ✏️ Editar
+                                    </a>
+                                    <a href="{% url 'eliminar_cliente' cliente.rut %}" class="btn btn-danger btn-sm">
+                                        🗑️ Eliminar
+                                    </a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

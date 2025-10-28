@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminar Cliente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #dc3545;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .warning-text {
+            text-align: center;
+            color: #856404;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .cliente-info {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            width: 120px;
+        }
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button, .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        button[type="submit"] {
+            background-color: #dc3545;
+            color: white;
+        }
+        button[type="submit"]:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .alert {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Eliminar Cliente</h1>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="warning-box">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">¿Estás seguro de que deseas eliminar este cliente?</div>
+            <p style="text-align: center; color: #666; margin-top: 10px;">
+                Esta acción no se puede deshacer.
+            </p>
+        </div>
+        
+        <div class="cliente-info">
+            <h3 style="margin-bottom: 15px; color: #333;">Información del Cliente:</h3>
+            
+            <div class="info-row">
+                <span class="info-label">RUT:</span>
+                <span class="info-value">{{ cliente.rut }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">{{ cliente.nombre }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Apellido:</span>
+                <span class="info-value">{{ cliente.apellido }}</span>
+            </div>
+            
+            {% if cliente.email %}
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ cliente.email }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="info-row">
+                <span class="info-label">Comuna:</span>
+                <span class="info-value">{{ cliente.comuna }}</span>
+            </div>
+        </div>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="button-group">
+                <button type="submit">Sí, Eliminar Cliente</button>
+                <a href="{% url 'lista_clientes' %}" class="btn btn-secondary">No, Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

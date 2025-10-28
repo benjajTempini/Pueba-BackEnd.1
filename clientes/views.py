@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Cliente
 
@@ -41,3 +41,39 @@ def registrar_cliente(request):
             messages.error(request, f"Error al registrar cliente: {str(e)}")
     
     return render(request, 'clientes/registrar_cliente.html')
+
+def editar_cliente(request, rut):
+    cliente = get_object_or_404(Cliente, rut=rut)
+    
+    if request.method == 'POST':
+        cliente.nombre = request.POST.get('nombre')
+        cliente.apellido = request.POST.get('apellido')
+        cliente.email = request.POST.get('email')
+        cliente.comuna = request.POST.get('comuna')
+        
+        if not cliente.nombre or not cliente.apellido or not cliente.comuna:
+            messages.error(request, "Nombre, apellido y comuna son obligatorios")
+            return render(request, 'clientes/editar_cliente.html', {'cliente': cliente})
+        
+        try:
+            cliente.save()
+            messages.success(request, f"Cliente {cliente.nombre} {cliente.apellido} actualizado exitosamente")
+            return redirect('lista_clientes')
+        except Exception as e:
+            messages.error(request, f"Error al actualizar cliente: {str(e)}")
+    
+    return render(request, 'clientes/editar_cliente.html', {'cliente': cliente})
+
+def eliminar_cliente(request, rut):
+    cliente = get_object_or_404(Cliente, rut=rut)
+    
+    if request.method == 'POST':
+        try:
+            nombre_completo = f"{cliente.nombre} {cliente.apellido}"
+            cliente.delete()
+            messages.success(request, f"Cliente {nombre_completo} eliminado exitosamente")
+            return redirect('lista_clientes')
+        except Exception as e:
+            messages.error(request, f"Error al eliminar cliente: {str(e)}")
+    
+    return render(request, 'clientes/eliminar_cliente.html', {'cliente': cliente})
