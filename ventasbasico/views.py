@@ -36,7 +36,15 @@ def historial_ventas(request):
         # Filtro por fecha si se proporciona
         fecha_filtro = request.GET.get('fecha')
         if fecha_filtro:
-            ventas = ventas.filter(fecha=fecha_filtro)
+            try:
+                from datetime import datetime
+                # Parsear la fecha del formulario (formato YYYY-MM-DD)
+                fecha_obj = datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
+                ventas = ventas.filter(fecha=fecha_obj)
+                logger.info(f"Filtrando por fecha: {fecha_obj}, ventas encontradas: {ventas.count()}")
+            except ValueError:
+                # Si hay error en el formato, ignorar el filtro
+                logger.warning(f"Formato de fecha inválido: {fecha_filtro}")
         
         # Filtro por cliente si se proporciona
         cliente_filtro = request.GET.get('cliente')
