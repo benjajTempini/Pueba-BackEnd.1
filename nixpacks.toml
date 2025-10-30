@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["python313"]
+
+[phases.install]
+cmds = [
+  "pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "python manage.py collectstatic --noinput --clear",
+  "python manage.py migrate --noinput"
+]
+
+[start]
+cmd = "gunicorn ventasbasico.wsgi:application --bind 0.0.0.0:$PORT"
