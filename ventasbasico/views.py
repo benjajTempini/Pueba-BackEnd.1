@@ -43,10 +43,15 @@ def historial_ventas(request):
         if cliente_filtro:
             ventas = ventas.filter(rut_cliente__rut__icontains=cliente_filtro)
         
+        # Calcular el monto total de todas las ventas
+        from django.db.models import Sum
+        monto_total = ventas.aggregate(Sum('total'))['total__sum'] or 0
+        
         return render(request, 'venta/historial.html', {
             'ventas': ventas,
             'fecha_filtro': fecha_filtro,
-            'cliente_filtro': cliente_filtro
+            'cliente_filtro': cliente_filtro,
+            'monto_total': monto_total
         })
     except Exception as e:
         logger.error(f"Error en historial_ventas: {str(e)}")
