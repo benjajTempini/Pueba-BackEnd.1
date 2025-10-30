@@ -35,6 +35,17 @@ if RAILWAY_PUBLIC_DOMAIN:
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# Configuración CSRF para Railway
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.railway.app",
+    "https://*.onrender.com",
+]
+
+if RAILWAY_PUBLIC_DOMAIN:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RAILWAY_PUBLIC_DOMAIN}")
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -189,3 +200,16 @@ LOGGING = {
         },
     },
 }
+
+# Configuración de seguridad para producción
+if not DEBUG:
+    # Cookies seguras
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Headers de seguridad
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
+    # Permitir que Railway/Render maneje SSL
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
