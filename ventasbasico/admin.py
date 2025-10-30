@@ -75,6 +75,12 @@ class VentaAdmin(admin.ModelAdmin):
         fecha_inicio = request.GET.get('fecha_inicio')
         fecha_fin = request.GET.get('fecha_fin')
         
+        # Convertir strings vacíos o "None" a None
+        if fecha_inicio in ['', 'None', None]:
+            fecha_inicio = None
+        if fecha_fin in ['', 'None', None]:
+            fecha_fin = None
+        
         ventas = Venta.objects.all().order_by('-fecha')
         
         # Aplicar filtros si existen
