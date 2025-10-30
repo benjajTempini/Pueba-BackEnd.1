@@ -161,16 +161,14 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Whitenoise configuration
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-    # Permitir que Whitenoise sirva archivos aunque falte manifest
-    WHITENOISE_MANIFEST_STRICT = False
-    # Permitir servir archivos estáticos sin comprimir como fallback
-    WHITENOISE_USE_FINDERS = False
-    WHITENOISE_AUTOREFRESH = False
-else:
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+# Whitenoise configuration - usar versión simple que siempre funciona
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Configuraciones adicionales de Whitenoise
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_USE_FINDERS = False
+WHITENOISE_AUTOREFRESH = False
+WHITENOISE_IMMUTABLE_FILE_TEST = lambda path, url: False
 
 # Directories donde Django busca archivos estáticos adicionales
 STATICFILES_DIRS = []
