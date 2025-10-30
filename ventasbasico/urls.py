@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import include, path
-from clientes import views as clientes_views
 from ventasbasico import views
 
 urlpatterns = [
@@ -25,8 +24,7 @@ urlpatterns = [
     path('historial/', views.historial_ventas, name='historial_ventas'),
     path('detalle-venta/<int:venta_id>/', views.detalle_venta, name='detalle_venta'),
     
-    # URLs para clientes habituales
-    path('clientes/', clientes_views.lista_clientes, name='lista_clientes'),
-    path('registrar-cliente/', clientes_views.registrar_cliente, name='registrar_cliente'),
+    # URLs para clientes - incluir todas las URLs de la app clientes
+    path('clientes/', include('clientes.urls')),
 
 ]
