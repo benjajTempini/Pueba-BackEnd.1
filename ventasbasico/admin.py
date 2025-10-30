@@ -5,6 +5,7 @@ from django.urls import path
 from django.shortcuts import render
 from django.http import HttpResponse
 from datetime import datetime, timedelta
+import csv
 from .models import Productos, Venta, DetalleVenta
 
 @admin.register(Productos)
@@ -65,8 +66,59 @@ class VentaAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('reporte-ventas/', self.admin_site.admin_view(self.reporte_ventas), name='reporte-ventas'),
+            path('exportar-ventas-csv/', self.admin_site.admin_view(self.exportar_ventas_csv), name='exportar-ventas-csv'),
         ]
         return custom_urls + urls
+    
+    def exportar_ventas_csv(self, request):
+        '''Exportar reporte de ventas a CSV'''
+        fecha_inicio = request.GET.get('fecha_inicio')
+        fecha_fin = request.GET.get('fecha_fin')
+        
+        ventas = Venta.objects.all().order_by('-fecha')
+        
+        # Aplicar filtros si existen
+        if fecha_inicio:
+            ventas = ventas.filter(fecha__gte=fecha_inicio)
+        if fecha_fin:
+            ventas = ventas.filter(fecha__lte=fecha_fin)
+        
+        # Crear respuesta CSV
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="reporte_ventas_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        
+        # Agregar BOM para Excel
+        response.write('\ufeff')
+        
+        writer = csv.writer(response)
+        
+        # Encabezados
+        writer.writerow(['Número Venta', 'Fecha', 'Cliente (RUT)', 'Cliente (Nombre)', 'Total', 'Cantidad Items'])
+        
+        # Datos
+        for venta in ventas:
+            cantidad_items = venta.detalles.aggregate(total=Sum('cantidad'))['total'] or 0
+            cliente_nombre = f"{venta.rut_cliente.nombre} {venta.rut_cliente.apellido}" if venta.rut_cliente else "Sin cliente"
+            
+            writer.writerow([
+                venta.numero,
+                venta.fecha.strftime('%Y-%m-%d %H:%M:%S'),
+                venta.rut_cliente.rut if venta.rut_cliente else 'N/A',
+                cliente_nombre,
+                f"{venta.total:.2f}",
+                cantidad_items
+            ])
+        
+        # Fila de totales
+        total_ventas = ventas.aggregate(total=Sum('total'))['total'] or 0
+        cantidad_ventas = ventas.count()
+        writer.writerow([])
+        writer.writerow(['TOTALES', '', '', '', f"{total_ventas:.2f}", ''])
+        writer.writerow(['Cantidad de ventas', '', '', '', cantidad_ventas, ''])
+        if cantidad_ventas > 0:
+            writer.writerow(['Promedio por venta', '', '', '', f"{total_ventas/cantidad_ventas:.2f}", ''])
+        
+        return response
     
     def reporte_ventas(self, request):
         '''Vista para generar reporte de ventas por rango de fechas'''

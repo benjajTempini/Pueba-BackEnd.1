@@ -10,7 +10,7 @@
     <!-- Formulario de filtros -->
     <div class="module" style="margin-bottom: 20px;">
         <form method="get" style="padding: 20px;">
-            <div style="display: flex; gap: 15px; align-items: flex-end;">
+            <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div>
                     <label for="fecha_inicio"><strong>Fecha Inicio:</strong></label><br>
                     <input type="date" id="fecha_inicio" name="fecha_inicio" 
@@ -31,6 +31,11 @@
                     <a href="{% url 'admin:reporte-ventas' %}" class="button" 
                        style="padding: 6px 15px; background-color: #666; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin-left: 5px;">
                         Limpiar
+                    </a>
+                    <a href="{% url 'admin:exportar-ventas-csv' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" 
+                       class="button" 
+                       style="padding: 6px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; display: inline-block; margin-left: 5px;">
+                        📥 Descargar CSV
                     </a>
                 </div>
             </div>
