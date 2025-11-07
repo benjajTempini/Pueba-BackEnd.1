@@ -1,8 +1,19 @@
 from django.contrib import admin
 from django.urls import include, path
 from ventasbasico import views
+from rest_framework import routers
+
+
+router = routers.DefaultRouter()
+router.register(r"users", views.UserViewSet)
+router.register(r"groups", views.GroupViewSet)
+
 
 urlpatterns = [
+
+    path("auth", include(router.urls)),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+
     #Vista admin y Home
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),

@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-a!)1(l*2=!gtiys$g6i^4p4d9b%60z^el0v$)0&6%d1nyr&kd#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG ='True'
 
 ALLOWED_HOSTS = [
     ".railway.app",      # Railway
@@ -56,7 +56,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'clientes',
     'ventasbasico',
+    'rest_framework',
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -93,35 +99,43 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Railway provee DATABASE_URL automáticamente
-DATABASE_URL = os.getenv('DATABASE_URL')
+#DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
+DATABASES = {
+    "default":{
+        "ENGINE":"django.db.backends.sqlite3",
+        "NAME":"bd.sqlite3",
+    }
+}
+
+
+#if DATABASE_URL:
     # Usar DATABASE_URL si existe (Railway/Render)
-    DATABASES = {
-        'default': dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=False  # Railway maneja SSL automáticamente
-        )
-    }
-else:
+#    DATABASES = {
+#        'default': dj_database_url.parse(
+#            DATABASE_URL,
+#            conn_max_age=600,
+#            conn_health_checks=True,
+#            ssl_require=False  # Railway maneja SSL automáticamente
+#        )
+#    }
+#else:
     # Configuración manual para desarrollo local
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'postgres'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT', '6543'),
-            'CONN_MAX_AGE': 600,
-            'OPTIONS': {
-                'connect_timeout': 10,
-                'sslmode': os.getenv('PGSSLMODE', 'prefer'),
-            }
-        }
-    }
+#    DATABASES = {
+#        'default': {
+#            'ENGINE': 'django.db.backends.postgresql',
+#            'NAME': os.getenv('DB_NAME', 'postgres'),
+#            'USER': os.getenv('DB_USER'),
+#            'PASSWORD': os.getenv('DB_PASSWORD'),
+#            'HOST': os.getenv('DB_HOST'),
+#            'PORT': os.getenv('DB_PORT', '6543'),
+#            'CONN_MAX_AGE': 600,
+#            'OPTIONS': {
+#                'connect_timeout': 10,
+#                'sslmode': os.getenv('PGSSLMODE', 'prefer'),
+#            }
+#        }
+#    }
 
 
 # Password validation
@@ -158,16 +172,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Whitenoise configuration - usar versión simple que siempre funciona
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# ✅ Carpetas adicionales donde Django busca archivos estáticos
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # Carpeta global
+]
 
-# Configuraciones adicionales de Whitenoise
-WHITENOISE_MANIFEST_STRICT = False
-WHITENOISE_USE_FINDERS = False
-WHITENOISE_AUTOREFRESH = False
+# ✅ Configuración diferente para desarrollo y producción
+if DEBUG:
+    # Desarrollo: usar el sistema simple de Django
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_AUTOREFRESH = True
+else:
+    # Producción: usar Whitenoise comprimido
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    WHITENOISE_USE_FINDERS = False
+    WHITENOISE_AUTOREFRESH = False
+    WHITENOISE_MANIFEST_STRICT = False
+
 WHITENOISE_IMMUTABLE_FILE_TEST = lambda path, url: False
 
 # Directories donde Django busca archivos estáticos adicionales
