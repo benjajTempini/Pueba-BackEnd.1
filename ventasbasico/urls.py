@@ -7,7 +7,9 @@ from rest_framework import routers
 router = routers.DefaultRouter()
 router.register(r"users", views.UserViewSet)
 router.register(r"groups", views.GroupViewSet)
-
+router.register(r"productos", views.ProductosViewSet)
+router.register(r"venta", views.VentaViewsSet)
+router.register(r"detalleVenta", views.DetalleVentaViewSet)
 
 urlpatterns = [
 

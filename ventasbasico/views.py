@@ -3,13 +3,29 @@ from django.contrib import messages
 from django.db import transaction
 from datetime import date, datetime
 from ventasbasico import forms
-from . import models
+from .models import *
 from clientes.models import Cliente
 import logging
+from .serializers import *
 
 from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets
 from .serializers import GroupSerializer, UserSerializer
+
+class ProductosViewSet(viewsets.ModelViewSet):
+    queryset = Productos.objects.all().order_by("nombre")
+    serializer_class = ProductosSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class VentaViewsSet(viewsets.ModelViewSet):
+    queryset = Venta.objects.all().order_by("numero")
+    serializer_class = VentaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class DetalleVentaViewSet(viewsets.ModelViewSet):
+    queryset = DetalleVenta.objects.all().order_by("venta")
+    serializer_class = DetalleVentaSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("-date_joined")
