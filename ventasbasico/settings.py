@@ -24,8 +24,10 @@ ALLOWED_HOSTS = [
     ".railway.app",      # Railway
     ".onrender.com",     # Render (por si volvés a usarlo)
     "127.0.0.1",
-    "localhost"
+    "localhost",
+
 ]
+cors_allow_all_origins = True
 
 # Agregar hostname dinámico de Railway o Render
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'clientes',
     'ventasbasico',
     'rest_framework',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -83,6 +86,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'ventasbasico.urls'
@@ -157,10 +162,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# ✅ Carpetas adicionales donde Django busca archivos estáticos
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Carpeta global
-]
+# ✅ Solo agregar si la carpeta existe
+STATICFILES_DIRS = []
+if os.path.exists(os.path.join(BASE_DIR, 'static')):
+    STATICFILES_DIRS.append(os.path.join(BASE_DIR, 'static'))
 
 # ✅ Configuración diferente para desarrollo y producción
 if DEBUG:

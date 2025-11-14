@@ -15,7 +15,7 @@ from .serializers import GroupSerializer, UserSerializer
 class ProductosViewSet(viewsets.ModelViewSet):
     queryset = Productos.objects.all().order_by("nombre")
     serializer_class = ProductosSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
 
 class VentaViewsSet(viewsets.ModelViewSet):
     queryset = Venta.objects.all().order_by("numero")
