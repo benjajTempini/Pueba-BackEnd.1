@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+from datetime import timedelta
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
@@ -17,7 +18,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-a!)1(l*2=!gtiys$g6i^4p4d9b%60z^el0v$)0&6%d1nyr&kd#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG ='True'
+DEBUG = True  # ✅ Cambiado de 'True' (string) a True (booleano)
 
 ALLOWED_HOSTS = [
     ".railway.app",      # Railway
@@ -60,8 +61,17 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 MIDDLEWARE = [
@@ -102,40 +112,11 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 #DATABASE_URL = os.getenv('DATABASE_URL')
 
 DATABASES = {
-    "default":{
-        "ENGINE":"django.db.backends.sqlite3",
-        "NAME":"bd.sqlite3",
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "bd.sqlite3",  # ✅ Corregido: usar BASE_DIR
     }
 }
-
-
-#if DATABASE_URL:
-    # Usar DATABASE_URL si existe (Railway/Render)
-#    DATABASES = {
-#        'default': dj_database_url.parse(
-#            DATABASE_URL,
-#            conn_max_age=600,
-#            conn_health_checks=True,
-#            ssl_require=False  # Railway maneja SSL automáticamente
-#        )
-#    }
-#else:
-    # Configuración manual para desarrollo local
-#    DATABASES = {
-#        'default': {
-#            'ENGINE': 'django.db.backends.postgresql',
-#            'NAME': os.getenv('DB_NAME', 'postgres'),
-#            'USER': os.getenv('DB_USER'),
-#            'PASSWORD': os.getenv('DB_PASSWORD'),
-#            'HOST': os.getenv('DB_HOST'),
-#            'PORT': os.getenv('DB_PORT', '6543'),
-#            'CONN_MAX_AGE': 600,
-#            'OPTIONS': {
-#                'connect_timeout': 10,
-#                'sslmode': os.getenv('PGSSLMODE', 'prefer'),
-#            }
-#        }
-#    }
 
 
 # Password validation
@@ -195,9 +176,6 @@ else:
     WHITENOISE_MANIFEST_STRICT = False
 
 WHITENOISE_IMMUTABLE_FILE_TEST = lambda path, url: False
-
-# Directories donde Django busca archivos estáticos adicionales
-STATICFILES_DIRS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
