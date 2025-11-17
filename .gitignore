@@ -166,6 +166,7 @@ cython_debug/
 # Django-specific
 db.sqlite3
 media/
+bd.sqlite3
 
 # Environment variables
 .env

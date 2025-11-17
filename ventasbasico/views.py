@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.db import transaction
 from datetime import date, datetime
 from ventasbasico import forms
-from .models import *
+from .models import Productos, Venta, DetalleVenta
 from clientes.models import Cliente
 import logging
 from .serializers import *
@@ -118,7 +118,7 @@ def home(request):
     """Página principal con lista de productos"""
     try:
         # Consulta todos los productos de la base de datos
-        productos = models.Productos.objects.all()
+        productos = Productos.objects.all()
         return render(request, 'venta/home.html', {'productos': productos})
     except Exception as e:
         logger.error(f"Error en home: {str(e)}")

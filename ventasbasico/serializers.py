@@ -18,7 +18,6 @@ class DetalleVentaSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["venta","producto","cantidad","precio_unitario"]
 
 
-
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User

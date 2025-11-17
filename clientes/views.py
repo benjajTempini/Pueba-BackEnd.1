@@ -2,6 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Cliente
 
+# filepath: /c:/Users/sistemas/Documents/GitHub/Pueba-BackEnd.1/clientes/views.py
+from rest_framework import viewsets, permissions
+from .models import Cliente
+from .serializers import ClienteSerializer
+import logging
+
+
+class ClienteViewSet(viewsets.ModelViewSet):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+logger = logging.getLogger(__name__)
+
+
 # Create your views here.
 def lista_clientes(request):
     clientes = Cliente.objects.all()

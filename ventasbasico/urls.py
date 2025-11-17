@@ -14,8 +14,8 @@ router.register(r"detalleVenta", views.DetalleVentaViewSet)
 
 urlpatterns = [
 
-    path("auth", include(router.urls)),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("auth/", include(router.urls)),
+    path("api/", include("rest_framework.urls", namespace="rest_framework")),
 
     #Vista admin y Home
     path('admin/', admin.site.urls),
