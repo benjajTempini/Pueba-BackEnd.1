@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Cliente
-
 # filepath: /c:/Users/sistemas/Documents/GitHub/Pueba-BackEnd.1/clientes/views.py
 from rest_framework import viewsets, permissions
 from .models import Cliente
 from .serializers import ClienteSerializer, GroupSerializer, UserSerializer
 import logging
-
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -7,7 +7,7 @@ from .models import Productos, Venta, DetalleVenta
 from clientes.models import Cliente
 import logging
 from rest_framework import permissions, viewsets
-
+from django.contrib.auth.decorators import login_required
 # Importa los serializadores locales de ventas
 from .serializers import ProductosSerializer, VentaSerializer, DetalleVentaSerializer
 
@@ -17,7 +17,7 @@ from clientes.serializers import GroupSerializer, UserSerializer
 class ProductosViewSet(viewsets.ModelViewSet):
     queryset = Productos.objects.all().order_by("nombre")
     serializer_class = ProductosSerializer
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
 class VentaViewsSet(viewsets.ModelViewSet):
     queryset = Venta.objects.all().order_by("numero")

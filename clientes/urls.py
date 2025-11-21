@@ -5,7 +5,7 @@ from .views import ClienteViewSet
 
 from django.urls import include, path
 from rest_framework import routers
-
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
 
 
@@ -18,7 +18,7 @@ router.register(r'clientes', ClienteViewSet)
 
 urlpatterns = [
 
-    path("auth/", include(router.urls)),
+    path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 
     path('', views.lista_clientes, name='lista_clientes'),
@@ -26,6 +26,7 @@ urlpatterns = [
     path('editar/<str:rut>/', views.editar_cliente, name='editar_cliente'),
     path('eliminar/<str:rut>/', views.eliminar_cliente, name='eliminar_cliente'),
 
-    path("auth/", include(router.urls)),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 

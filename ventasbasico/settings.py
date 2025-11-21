@@ -23,7 +23,7 @@ ALLOWED_HOSTS = [
     "localhost",
 
 ]
-cors_allow_all_origins = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Agregar hostname dinámico de Railway o Render
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
