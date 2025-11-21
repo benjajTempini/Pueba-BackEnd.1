@@ -6,16 +6,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 
 router = routers.DefaultRouter()
-router.register(r"users", views.UserViewSet)
-router.register(r"groups", views.GroupViewSet)
 router.register(r"productos", views.ProductosViewSet)
 router.register(r"venta", views.VentaViewsSet)
 router.register(r"detalleVenta", views.DetalleVentaViewSet)
 
 urlpatterns = [
-
+    
     path("auth/", include(router.urls)),
-    path("api/", include("rest_framework.urls", namespace="rest_framework")),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 
     #Vista admin y Home
     path('admin/', admin.site.urls),

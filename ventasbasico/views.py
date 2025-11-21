@@ -6,11 +6,13 @@ from ventasbasico import forms
 from .models import Productos, Venta, DetalleVenta
 from clientes.models import Cliente
 import logging
-from .serializers import *
-
-from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets
-from .serializers import GroupSerializer, UserSerializer
+
+# Importa los serializadores locales de ventas
+from .serializers import ProductosSerializer, VentaSerializer, DetalleVentaSerializer
+
+# Importa los serializadores de usuarios y grupos desde la app 'clientes'
+from clientes.serializers import GroupSerializer, UserSerializer
 
 class ProductosViewSet(viewsets.ModelViewSet):
     queryset = Productos.objects.all().order_by("nombre")
@@ -27,17 +29,6 @@ class DetalleVentaViewSet(viewsets.ModelViewSet):
     serializer_class = DetalleVentaSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by("-date_joined")
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class GroupViewSet(viewsets.ModelViewSet):
-    queryset = Group.objects.all().order_by("name")
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
 
 
 logger = logging.getLogger(__name__)
@@ -49,13 +40,13 @@ def generar_numero_venta():
     prefijo = fecha_actual.strftime("%Y%m%d")
     
     # Contar ventas del día actual
-    ventas_hoy = models.Venta.objects.filter(fecha=date.today()).count()
+    ventas_hoy = Venta.objects.filter(fecha=date.today()).count()
     
     # Generar número consecutivo (máximo 10 intentos para evitar loops infinitos)
     max_intentos = 10
     for i in range(max_intentos):
         numero = f"{prefijo}-{ventas_hoy + i + 1:04d}"
-        if not models.Venta.objects.filter(numero=numero).exists():
+        if not Venta.objects.filter(numero=numero).exists():
             return numero
     
     # Si después de 10 intentos no se encontró número, usar timestamp
@@ -64,7 +55,7 @@ def generar_numero_venta():
 def historial_ventas(request):
     """Vista para mostrar el historial de ventas"""
     try:
-        ventas = models.Venta.objects.all().order_by('-fecha', '-id')
+        ventas = Venta.objects.all().order_by('-fecha', '-id')
         
         # Filtro por fecha si se proporciona
         fecha_filtro = request.GET.get('fecha')
@@ -102,8 +93,8 @@ def historial_ventas(request):
 def detalle_venta(request, venta_id):
     """Vista para mostrar el detalle de una venta específica"""
     try:
-        venta = get_object_or_404(models.Venta, id=venta_id)
-        detalles = models.DetalleVenta.objects.filter(venta=venta)
+        venta = get_object_or_404(Venta, id=venta_id)
+        detalles = DetalleVenta.objects.filter(venta=venta)
         
         return render(request, 'venta/detalle_venta.html', {
             'venta': venta,
@@ -141,7 +132,7 @@ def registro(request):
     return render(request, 'venta/registro.html', {'form': form})
 
 def editar(request, pk):
-    producto = get_object_or_404(models.Productos,pk=pk)
+    producto = get_object_or_404(Productos,pk=pk)
 
     if request.method == 'POST':
         form = forms.ProductoForm(request.POST, instance=producto)
@@ -158,7 +149,7 @@ def editar(request, pk):
     return render(request, 'venta/editar.html', {'form':form, 'producto':producto})
 
 def eliminar(request, pk):
-    producto = get_object_or_404(models.Productos,pk=pk)
+    producto = get_object_or_404(Productos,pk=pk)
     if request.method == 'POST':
         producto.delete()
         messages.success(request, 'Producto Eliminado exitosamente 😊')
@@ -171,7 +162,7 @@ def agregar_carrito(request):
         cantidad = int(request.POST.get('cantidad', 1))
         
         try:
-            producto = models.Productos.objects.get(id=producto_id)
+            producto = Productos.objects.get(id=producto_id)
             
             # Verificar stock disponible
             if cantidad > producto.stock:
@@ -203,7 +194,7 @@ def agregar_carrito(request):
             
             messages.success(request, f"Se agregaron {cantidad} unidades de {producto.nombre} al carrito")
             
-        except models.Productos.DoesNotExist:
+        except Productos.DoesNotExist:
             messages.error(request, "El producto no existe")
         except Exception as e:
             messages.error(request, f"Error al agregar al carrito: {str(e)}")
@@ -290,7 +281,7 @@ def venta(request):
                 
                 # Verificar stock antes de procesar
                 for producto_id, item in carrito.items():
-                    producto = models.Productos.objects.get(id=producto_id)
+                    producto = Productos.objects.get(id=producto_id)
                     if producto.stock < item['cantidad']:
                         messages.error(request, f"Stock insuficiente para {producto.nombre}")
                         return render(request, 'venta/venta.html', {
@@ -301,7 +292,7 @@ def venta(request):
                 
                 # Crear la venta
                 numero_venta = generar_numero_venta()
-                venta = models.Venta.objects.create(
+                venta = Venta.objects.create(
                     numero=numero_venta,
                     rut_cliente=cliente_obj,
                     total=total
@@ -309,10 +300,10 @@ def venta(request):
                 
                 # Crear los detalles de venta y actualizar stock
                 for producto_id, item in carrito.items():
-                    producto = models.Productos.objects.get(id=producto_id)
+                    producto = Productos.objects.get(id=producto_id)
                     
                     # Crear detalle de venta
-                    models.DetalleVenta.objects.create(
+                    DetalleVenta.objects.create(
                         venta=venta,
                         producto=producto,
                         cantidad=item['cantidad'],
