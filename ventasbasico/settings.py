@@ -23,13 +23,6 @@ ALLOWED_HOSTS = [
     "localhost",
 ]
 
-# Configuración de CORS
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
-# En producción, usa CORS_ALLOWED_ORIGINS en lugar de CORS_ALLOW_ALL_ORIGINS
-# CORS_ALLOWED_ORIGINS = [
-#     "https://tu-frontend-angular.vercel.app",
-# ]
-
 # Agregar hostname dinámico de Railway o Render
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
@@ -39,16 +32,47 @@ if RAILWAY_PUBLIC_DOMAIN:
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# Configuración CSRF para Railway
+# Configuración de CORS
+if DEBUG:
+    # Desarrollo: permitir todos los orígenes
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # Producción: especificar orígenes permitidos
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://*.railway.app",
+        "https://*.onrender.com",
+        "https://*.vercel.app",  # Para tu frontend Angular en Vercel
+        "http://localhost:4200",  # Para desarrollo local de Angular
+    ]
+    
+    # Agregar orígenes específicos desde variables de entorno
+    FRONTEND_URL = os.getenv('FRONTEND_URL')
+    if FRONTEND_URL:
+        CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
+
+# Configuración CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
     "https://*.onrender.com",
+    "https://*.vercel.app",
 ]
 
 if RAILWAY_PUBLIC_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RAILWAY_PUBLIC_DOMAIN}")
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
+# Agregar URL del frontend si está configurada
+FRONTEND_URL = os.getenv('FRONTEND_URL')
+if FRONTEND_URL:
+    # Extraer el dominio de la URL completa
+    from urllib.parse import urlparse
+    parsed_url = urlparse(FRONTEND_URL)
+    if parsed_url.scheme and parsed_url.netloc:
+        frontend_origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
+        if frontend_origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(frontend_origin)
 
 # Application definition
 INSTALLED_APPS = [
