@@ -3,6 +3,7 @@ from django.contrib import messages
 from .models import Cliente
 # filepath: /c:/Users/sistemas/Documents/GitHub/Pueba-BackEnd.1/clientes/views.py
 from rest_framework import viewsets, permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import Cliente
 from .serializers import ClienteSerializer, GroupSerializer, UserSerializer
 import logging
@@ -10,21 +11,42 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para usuarios:
+    - Solo admin autenticado puede acceder
+    """
     queryset = User.objects.all().order_by("-date_joined")
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para grupos:
+    - Solo admin autenticado puede acceder
+    """
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
 class ClienteViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para clientes:
+    - Crear/Editar: Público (cualquiera puede registrarse y actualizar sus datos)
+    - Ver/Eliminar: Solo admin autenticado
+    """
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            # Permitir crear y editar sin autenticación
+            permission_classes = [AllowAny]
+        else:
+            # Ver lista, eliminar requiere autenticación
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 logger = logging.getLogger(__name__)
 

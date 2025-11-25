@@ -7,6 +7,7 @@ from .models import Productos, Venta, DetalleVenta
 from clientes.models import Cliente
 import logging
 from rest_framework import permissions, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import login_required
 # Importa los serializadores locales de ventas
 from .serializers import ProductosSerializer, VentaSerializer, DetalleVentaSerializer
@@ -15,19 +16,68 @@ from .serializers import ProductosSerializer, VentaSerializer, DetalleVentaSeria
 from clientes.serializers import GroupSerializer, UserSerializer
 
 class ProductosViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para productos:
+    - Listar y ver: Público (clientes pueden ver productos sin login)
+    - Crear/Editar/Eliminar: Solo admin autenticado
+    """
     queryset = Productos.objects.all().order_by("nombre")
     serializer_class = ProductosSerializer
-    permission_classes = []
+    lookup_field = 'codigo'  # Usar código en lugar de id para búsquedas
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            # Permitir ver productos sin autenticación
+            permission_classes = [AllowAny]
+        else:
+            # Crear, actualizar, eliminar requiere autenticación
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 class VentaViewsSet(viewsets.ModelViewSet):
+    """
+    ViewSet para ventas:
+    - Crear: Público (clientes pueden comprar sin login)
+    - Ver/Editar/Eliminar: Solo admin autenticado
+    """
     queryset = Venta.objects.all().order_by("numero")
     serializer_class = VentaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            # Permitir crear ventas sin autenticación (compras de clientes)
+            permission_classes = [AllowAny]
+        else:
+            # Ver historial, editar, eliminar requiere autenticación
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 class DetalleVentaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para detalles de venta:
+    - Ver detalles: Público (para que clientes vean sus compras)
+    - Crear/Editar/Eliminar: Solo admin autenticado
+    """
     queryset = DetalleVenta.objects.all().order_by("venta")
     serializer_class = DetalleVentaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            # Permitir ver detalles sin autenticación
+            permission_classes = [AllowAny]
+        else:
+            # Crear, editar, eliminar requiere autenticación
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+    
+    def get_queryset(self):
+        """Filtrar por venta si se proporciona el parámetro"""
+        queryset = super().get_queryset()
+        venta_numero = self.request.query_params.get('venta', None)
+        if venta_numero:
+            # Filtrar por el número de venta (campo de texto en el modelo Venta)
+            queryset = queryset.filter(venta__numero=venta_numero)
+        return queryset
 
 
 

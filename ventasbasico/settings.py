@@ -109,15 +109,33 @@ WSGI_APPLICATION = 'ventasbasico.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Railway provee DATABASE_URL automáticamente
-#DATABASE_URL = os.getenv('DATABASE_URL')
+# Configuración de base de datos
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "bd.sqlite3",  # ✅ Corregido: usar BASE_DIR
+if DATABASE_URL:
+    # Si existe DATABASE_URL (producción), usarla
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Si no existe, usar configuración manual desde variables de entorno
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'postgres'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'require',  # Supabase requiere SSL
+            },
+        }
+    }
 
 
 # Password validation
