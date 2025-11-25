@@ -14,16 +14,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-a!)1(l*2=!gtiys$g6i^4p4d9b%60z^el0v$)0&6%d1nyr&kd#')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # ✅ Cambiado de 'True' (string) a True (booleano)
+DEBUG = os.getenv('DEBUG', 'True') == 'True'  # En producción configurar DEBUG=False
 
 ALLOWED_HOSTS = [
     ".railway.app",      # Railway
     ".onrender.com",     # Render (por si volvés a usarlo)
     "127.0.0.1",
     "localhost",
-
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+
+# Configuración de CORS
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'
+# En producción, usa CORS_ALLOWED_ORIGINS en lugar de CORS_ALLOW_ALL_ORIGINS
+# CORS_ALLOWED_ORIGINS = [
+#     "https://tu-frontend-angular.vercel.app",
+# ]
 
 # Agregar hostname dinámico de Railway o Render
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN')
