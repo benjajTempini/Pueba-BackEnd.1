@@ -9,7 +9,11 @@ from datetime import datetime, date
 class ProductosSerializer(serializers.ModelSerializer):
     class Meta:
         model = Productos
-        fields = ["id", "nombre", "codigo", "stock", "precio"]
+        fields = [
+            "id", "nombre", "codigo", "stock", "precio",
+            "descripcion_corta", "descripcion_larga", 
+            "palabras_clave", "beneficios", "descripcion_generada_fecha"
+        ]
 
 class DetalleVentaSerializer(serializers.ModelSerializer):
     producto_detalle = ProductosSerializer(source='producto', read_only=True)

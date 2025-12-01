@@ -91,6 +91,11 @@ python manage.py runserver
 - `POST /api/token/` - Obtener token JWT
 - `POST /api/token/refresh/` - Refrescar token
 
+### 🤖 Inteligencia Artificial (Groq Cloud)
+- `POST /api/ia/productos/recomendar/` - Recomendador de productos (público)
+- `POST /api/ia/productos/{id}/generar-descripcion/` - Generar descripción (requiere auth)
+- `POST /api/ia/chat/` - Chatbot de atención (público)
+
 ## 🛠️ Tecnologías
 
 - Django 5.2
@@ -98,6 +103,17 @@ python manage.py runserver
 - PostgreSQL (Supabase)
 - JWT Authentication
 - WhiteNoise (archivos estáticos)
+- 🤖 **Groq Cloud AI** (Llama 3.1 70B) - Ver [GROQ_AI_INTEGRATION.md](GROQ_AI_INTEGRATION.md)
+
+## 🤖 Funcionalidades con IA
+
+Este proyecto incluye **3 características impulsadas por IA** usando Groq Cloud:
+
+1. **Recomendador de Productos Inteligente** - Analiza historial y sugiere productos
+2. **Generación Automática de Descripciones** - Crea descripciones atractivas con IA
+3. **Chatbot de Atención al Cliente** - Responde preguntas 24/7
+
+📖 **[Ver documentación completa de IA →](GROQ_AI_INTEGRATION.md)**
 - Gunicorn (servidor WSGI)
 
 ## 📝 Estructura del Proyecto

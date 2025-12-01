@@ -6,7 +6,9 @@ from ventasbasico import forms
 from .models import Productos, Venta, DetalleVenta
 from clientes.models import Cliente
 import logging
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
+from rest_framework.decorators import api_view, action, permission_classes
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.decorators import login_required
 # Importa los serializadores locales de ventas
@@ -14,6 +16,9 @@ from .serializers import ProductosSerializer, VentaSerializer, DetalleVentaSeria
 
 # Importa los serializadores de usuarios y grupos desde la app 'clientes'
 from clientes.serializers import GroupSerializer, UserSerializer
+
+# Importar servicio de GroqCloud para IA
+from .groq_service import GroqService
 
 class ProductosViewSet(viewsets.ModelViewSet):
     """
@@ -383,3 +388,386 @@ def venta(request):
         'total': total,
         'clientes': clientes
     })
+
+
+# ============================================
+# ENDPOINTS CON IA - GROQ CLOUD
+# ============================================
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def recomendar_productos_ia(request):
+    """
+    Endpoint: POST /api/ia/productos/recomendar/
+    
+    Recomienda productos usando IA basándose en el historial de compras del cliente
+    
+    Body:
+    {
+        "rut_cliente": "12345678-9",
+        "limite": 3  // Opcional, default 3
+    }
+    
+    Response:
+    {
+        "recomendaciones": [
+            {
+                "producto_id": 1,
+                "nombre": "Producto X",
+                "precio": 25000,
+                "stock": 50,
+                "razon": "Basado en tus compras anteriores de productos similares",
+                "confianza": "alta"
+            }
+        ],
+        "mensaje": "Estos productos podrían interesarte basado en tus compras anteriores"
+    }
+    """
+    try:
+        rut_cliente = request.data.get('rut_cliente')
+        limite = request.data.get('limite', 3)
+        
+        if not rut_cliente:
+            return Response(
+                {'error': 'El campo rut_cliente es obligatorio'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verificar que el cliente existe
+        try:
+            cliente = Cliente.objects.get(rut=rut_cliente)
+        except Cliente.DoesNotExist:
+            return Response(
+                {'error': f'Cliente con RUT {rut_cliente} no existe'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Obtener historial de compras del cliente
+        ventas = Venta.objects.filter(rut_cliente=cliente).prefetch_related('detalles__producto')
+        
+        historial = []
+        for venta in ventas:
+            for detalle in venta.detalles.all():
+                historial.append({
+                    'producto': detalle.producto.nombre,
+                    'cantidad': detalle.cantidad,
+                    'fecha': venta.fecha.strftime('%Y-%m-%d')
+                })
+        
+        # Obtener TODOS los productos disponibles (no solo una muestra)
+        productos_disponibles = []
+        todos_los_productos = Productos.objects.filter(stock__gt=0).order_by('-id')
+        
+        logger.info(f"Total de productos disponibles en BD: {todos_los_productos.count()}")
+        
+        for producto in todos_los_productos:
+            productos_disponibles.append({
+                'id': producto.id,
+                'nombre': producto.nombre,
+                'codigo': producto.codigo,
+                'precio': float(producto.precio),
+                'stock': producto.stock
+            })
+        
+        if not productos_disponibles:
+            return Response(
+                {'error': 'No hay productos disponibles en stock'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        logger.info(f"Enviando {len(productos_disponibles)} productos a la IA para recomendación")
+        
+        # Llamar a GroqCloud para obtener recomendaciones
+        groq = GroqService()
+        resultado = groq.recomendar_productos(
+            historial_cliente={
+                'cliente': f"{cliente.nombre} {cliente.apellido}",
+                'compras': historial
+            },
+            productos_disponibles=productos_disponibles,
+            limite=limite
+        )
+        
+        # Enriquecer recomendaciones con datos completos del producto
+        recomendaciones_enriquecidas = []
+        for rec in resultado.get('recomendaciones', []):
+            try:
+                producto = Productos.objects.get(id=rec['producto_id'])
+                recomendaciones_enriquecidas.append({
+                    'producto_id': producto.id,
+                    'nombre': producto.nombre,
+                    'codigo': producto.codigo,
+                    'precio': float(producto.precio),
+                    'stock': producto.stock,
+                    'razon': rec.get('razon', ''),
+                    'confianza': rec.get('confianza', 'media')
+                })
+            except Productos.DoesNotExist:
+                continue
+        
+        return Response({
+            'cliente': {
+                'rut': cliente.rut,
+                'nombre': f"{cliente.nombre} {cliente.apellido}"
+            },
+            'recomendaciones': recomendaciones_enriquecidas,
+            'mensaje': resultado.get('mensaje', 'Productos recomendados para ti')
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error en recomendar_productos_ia: {str(e)}")
+        return Response(
+            {'error': f'Error al generar recomendaciones: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generar_descripcion_ia(request, producto_id):
+    """
+    Endpoint: POST /api/ia/productos/{producto_id}/generar-descripcion/
+    
+    Genera una descripción atractiva para un producto usando IA
+    Requiere autenticación (solo admin)
+    
+    Response:
+    {
+        "producto": {
+            "id": 1,
+            "nombre": "Producto X",
+            "codigo": "ABC123"
+        },
+        "descripcion_corta": "Descripción breve y atractiva",
+        "descripcion_larga": "Descripción detallada completa...",
+        "palabras_clave": ["keyword1", "keyword2", ...],
+        "beneficios": ["Beneficio 1", "Beneficio 2", ...]
+    }
+    """
+    try:
+        # Buscar el producto
+        try:
+            producto = Productos.objects.get(id=producto_id)
+        except Productos.DoesNotExist:
+            return Response(
+                {'error': f'Producto con ID {producto_id} no existe'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Preparar características del producto
+        caracteristicas = {
+            'codigo': producto.codigo,
+            'precio': float(producto.precio),
+            'stock': producto.stock
+        }
+        
+        # Llamar a GroqCloud para generar descripción
+        groq = GroqService()
+        resultado = groq.generar_descripcion_producto(
+            nombre_producto=producto.nombre,
+            caracteristicas=caracteristicas
+        )
+        
+        # GUARDAR la descripción generada en la base de datos
+        import json
+        from django.utils import timezone
+        
+        producto.descripcion_corta = resultado.get('descripcion_corta', '')
+        producto.descripcion_larga = resultado.get('descripcion_larga', '')
+        producto.palabras_clave = ', '.join(resultado.get('palabras_clave', []))
+        producto.beneficios = json.dumps(resultado.get('beneficios', []), ensure_ascii=False)
+        producto.descripcion_generada_fecha = timezone.now()
+        producto.save()
+        
+        logger.info(f"Descripción IA guardada para producto {producto.id}: {producto.nombre}")
+        
+        return Response({
+            'producto': {
+                'id': producto.id,
+                'nombre': producto.nombre,
+                'codigo': producto.codigo,
+                'precio': float(producto.precio)
+            },
+            'descripcion_corta': resultado.get('descripcion_corta', ''),
+            'descripcion_larga': resultado.get('descripcion_larga', ''),
+            'palabras_clave': resultado.get('palabras_clave', []),
+            'beneficios': resultado.get('beneficios', []),
+            'guardado': True,
+            'fecha_generacion': producto.descripcion_generada_fecha.isoformat()
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error en generar_descripcion_ia: {str(e)}")
+        return Response(
+            {'error': f'Error al generar descripción: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def stats_ia(request):
+    """
+    Endpoint: GET /api/ia/stats/
+    
+    Muestra estadísticas de la IA y productos disponibles
+    Útil para debugging y verificar que la IA tiene acceso a todos los productos
+    """
+    try:
+        total_productos = Productos.objects.count()
+        productos_con_stock = Productos.objects.filter(stock__gt=0).count()
+        productos_sin_stock = Productos.objects.filter(stock=0).count()
+        
+        total_clientes = Cliente.objects.count()
+        total_ventas = Venta.objects.count()
+        
+        # Muestra de productos disponibles
+        productos_muestra = []
+        for p in Productos.objects.filter(stock__gt=0).order_by('nombre')[:10]:
+            productos_muestra.append({
+                'id': p.id,
+                'nombre': p.nombre,
+                'precio': float(p.precio),
+                'stock': p.stock
+            })
+        
+        return Response({
+            'productos': {
+                'total': total_productos,
+                'con_stock': productos_con_stock,
+                'sin_stock': productos_sin_stock
+            },
+            'clientes': total_clientes,
+            'ventas': total_ventas,
+            'muestra_productos': productos_muestra,
+            'mensaje': f'La IA tiene acceso a {productos_con_stock} productos con stock disponible'
+        })
+    except Exception as e:
+        logger.error(f"Error en stats_ia: {str(e)}")
+        return Response(
+            {'error': f'Error al obtener estadísticas: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def chatbot_atencion(request):
+    """
+    Endpoint: POST /api/ia/chat/
+    
+    Chatbot de atención al cliente usando IA
+    Responde preguntas sobre productos, ventas, políticas, etc.
+    
+    Body:
+    {
+        "mensaje": "¿Cuál es el horario de atención?",
+        "contexto": {  // Opcional
+            "venta_numero": "20241128-0001",  // Para consultar sobre una venta específica
+            "producto_id": 5  // Para consultar sobre un producto específico
+        }
+    }
+    
+    Response:
+    {
+        "respuesta": "Nuestro horario de atención es...",
+        "tipo": "informacion",
+        "requiere_humano": false,
+        "sugerencias": [
+            "¿Cuáles son los métodos de pago?",
+            "¿Cuánto demora el despacho?"
+        ]
+    }
+    """
+    try:
+        mensaje = request.data.get('mensaje')
+        contexto_extra = request.data.get('contexto', {})
+        
+        if not mensaje:
+            return Response(
+                {'error': 'El campo mensaje es obligatorio'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Preparar contexto adicional si se proporciona
+        contexto = {}
+        
+        # Si se consulta sobre una venta específica
+        if 'venta_numero' in contexto_extra:
+            try:
+                venta = Venta.objects.get(numero=contexto_extra['venta_numero'])
+                detalles = DetalleVenta.objects.filter(venta=venta)
+                
+                contexto['venta'] = {
+                    'numero': venta.numero,
+                    'fecha': venta.fecha.strftime('%Y-%m-%d'),
+                    'total': float(venta.total),
+                    'cliente': f"{venta.rut_cliente.nombre} {venta.rut_cliente.apellido}",
+                    'productos': [
+                        {
+                            'nombre': d.producto.nombre,
+                            'cantidad': d.cantidad,
+                            'precio': float(d.precio_unitario)
+                        }
+                        for d in detalles
+                    ]
+                }
+            except Venta.DoesNotExist:
+                pass
+        
+        # Si se consulta sobre un producto específico
+        if 'producto_id' in contexto_extra:
+            try:
+                producto = Productos.objects.get(id=contexto_extra['producto_id'])
+                contexto['producto'] = {
+                    'nombre': producto.nombre,
+                    'codigo': producto.codigo,
+                    'precio': float(producto.precio),
+                    'stock': producto.stock,
+                    'disponible': producto.stock > 0
+                }
+            except Productos.DoesNotExist:
+                pass
+        
+        # Agregar lista COMPLETA de productos disponibles si no hay contexto específico
+        if not contexto:
+            # Enviar TODOS los productos disponibles (no solo 5)
+            todos_los_productos = Productos.objects.filter(stock__gt=0).order_by('nombre')
+            
+            logger.info(f"Chatbot - Enviando {todos_los_productos.count()} productos a la IA")
+            
+            contexto['productos_disponibles'] = [
+                {
+                    'id': p.id,
+                    'nombre': p.nombre,
+                    'codigo': p.codigo,
+                    'precio': float(p.precio),
+                    'stock': p.stock
+                }
+                for p in todos_los_productos
+            ]
+            
+            contexto['total_productos'] = todos_los_productos.count()
+        
+        # Llamar a GroqCloud para obtener respuesta del chatbot
+        groq = GroqService()
+        resultado = groq.chatbot_atencion(
+            mensaje_usuario=mensaje,
+            contexto=contexto if contexto else None
+        )
+        
+        return Response({
+            'respuesta': resultado.get('respuesta', ''),
+            'tipo': resultado.get('tipo', 'otro'),
+            'requiere_humano': resultado.get('requiere_humano', False),
+            'sugerencias': resultado.get('sugerencias', [])
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"Error en chatbot_atencion: {str(e)}")
+        return Response(
+            {'error': f'Error en el chatbot: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

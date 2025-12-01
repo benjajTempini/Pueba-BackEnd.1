@@ -15,6 +15,21 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 
+    # ============================================
+    # ENDPOINTS CON IA - GROQ CLOUD
+    # ============================================
+    # Estadísticas de IA (debugging)
+    path('api/ia/stats/', views.stats_ia, name='stats_ia'),
+    
+    # Recomendador de productos inteligente
+    path('api/ia/productos/recomendar/', views.recomendar_productos_ia, name='recomendar_productos_ia'),
+    
+    # Generador de descripciones de productos
+    path('api/ia/productos/<int:producto_id>/generar-descripcion/', views.generar_descripcion_ia, name='generar_descripcion_ia'),
+    
+    # Chatbot de atención al cliente
+    path('api/ia/chat/', views.chatbot_atencion, name='chatbot_atencion'),
+
     #Vista admin y Home
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),

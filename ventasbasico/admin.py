@@ -10,10 +10,23 @@ from .models import Productos, Venta, DetalleVenta
 
 @admin.register(Productos)
 class ProductosAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'codigo', 'precio', 'stock', 'estado_stock')
-    list_filter = ('precio', 'stock')
-    search_fields = ('nombre', 'codigo')
+    list_display = ('nombre', 'codigo', 'precio', 'stock', 'estado_stock', 'tiene_descripcion_ia')
+    list_filter = ('precio', 'stock', 'descripcion_generada_fecha')
+    search_fields = ('nombre', 'codigo', 'descripcion_corta', 'descripcion_larga')
     ordering = ('nombre',)
+    
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('nombre', 'codigo', 'precio', 'stock')
+        }),
+        ('Descripciones Generadas por IA', {
+            'fields': ('descripcion_corta', 'descripcion_larga', 'palabras_clave', 'beneficios', 'descripcion_generada_fecha'),
+            'classes': ('collapse',),
+            'description': 'Contenido generado automáticamente por IA'
+        }),
+    )
+    
+    readonly_fields = ('descripcion_generada_fecha',)
     
     def estado_stock(self, obj):
         if obj.stock == 0:
@@ -23,6 +36,12 @@ class ProductosAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="color: green;">Stock OK</span>')
     estado_stock.short_description = 'Estado'
+    
+    def tiene_descripcion_ia(self, obj):
+        if obj.descripcion_corta:
+            return format_html('<span style="color: green;">✓ IA</span>')
+        return format_html('<span style="color: gray;">Sin IA</span>')
+    tiene_descripcion_ia.short_description = 'Descripción IA'
 
 class DetalleVentaInline(admin.TabularInline):
     model = DetalleVenta

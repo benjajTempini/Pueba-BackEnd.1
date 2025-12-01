@@ -7,6 +7,35 @@ class Productos(models.Model):
     codigo = models.CharField(max_length=50, unique=True)
     stock = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Campos para descripciones generadas por IA
+    descripcion_corta = models.CharField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="Descripción breve generada por IA (1-2 líneas)"
+    )
+    descripcion_larga = models.TextField(
+        blank=True, 
+        null=True,
+        help_text="Descripción detallada generada por IA"
+    )
+    palabras_clave = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text="Keywords SEO generadas por IA (separadas por comas)"
+    )
+    beneficios = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Lista de beneficios generados por IA (formato JSON)"
+    )
+    descripcion_generada_fecha = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Fecha en que se generó la descripción con IA"
+    )
 
     def __str__(self):
         return self.nombre

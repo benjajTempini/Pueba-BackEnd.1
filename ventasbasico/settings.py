@@ -276,3 +276,8 @@ if not DEBUG:
     
     # Permitir que Railway/Render maneje SSL
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ============================================
+# CONFIGURACIÓN DE IA - GROQ CLOUD
+# ============================================
+GROQ_API_KEY = os.getenv('GROQ_API_KEY', '')

@@ -8,3 +8,5 @@ dj-database-url
 djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
+groq>=0.11.0
+requests>=2.31.0
