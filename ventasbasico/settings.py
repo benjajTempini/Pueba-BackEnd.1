@@ -223,7 +223,10 @@ else:
     WHITENOISE_AUTOREFRESH = False
     WHITENOISE_MANIFEST_STRICT = False
 
-WHITENOISE_IMMUTABLE_FILE_TEST = lambda path, url: False
+def whitenoise_immutable_file_test(path, url):
+    return False
+
+WHITENOISE_IMMUTABLE_FILE_TEST = whitenoise_immutable_file_test
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
