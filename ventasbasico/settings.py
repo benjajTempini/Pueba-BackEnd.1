@@ -279,6 +279,17 @@ if not DEBUG:
     
     # Permitir que Railway/Render maneje SSL
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+
+# ============================================
+# CONFIGURACIÓN DE ARCHIVOS MULTIMEDIA
+# ============================================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Configuración para manejo de uploads
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB máximo por request
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB máximo por archivo
 
 # ============================================
 # CONFIGURACIÓN DE IA - GROQ CLOUD

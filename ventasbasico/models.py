@@ -7,6 +7,7 @@ class Productos(models.Model):
     codigo = models.CharField(max_length=50, unique=True)
     stock = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
+    foto = models.BinaryField(blank=True, null=True, editable=True)
     
     # Campos para descripciones generadas por IA
     descripcion_corta = models.CharField(

@@ -4,16 +4,108 @@ from clientes.models import Cliente
 from clientes.serializers import ClienteSerializer
 from django.db import transaction
 from datetime import datetime, date
+import base64
+from io import BytesIO
+from PIL import Image
 
 
 class ProductosSerializer(serializers.ModelSerializer):
+    """Serializer para productos con soporte de imágenes en base64"""
+    foto = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    foto_url = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = Productos
         fields = [
-            "id", "nombre", "codigo", "stock", "precio",
+            "id", "nombre", "codigo", "stock", "precio", "foto", "foto_url",
             "descripcion_corta", "descripcion_larga", 
             "palabras_clave", "beneficios", "descripcion_generada_fecha"
         ]
+    
+    def _detect_image_type(self, image_data):
+        """Detecta el tipo de imagen usando Pillow (reemplazo de imghdr para Python 3.13+)"""
+        try:
+            img = Image.open(BytesIO(image_data))
+            format_map = {
+                'JPEG': 'jpeg',
+                'PNG': 'png',
+                'GIF': 'gif',
+                'WEBP': 'webp',
+                'BMP': 'bmp'
+            }
+            return format_map.get(img.format, 'jpeg')
+        except Exception:
+            return 'jpeg'  # Default
+    
+    def get_foto_url(self, obj):
+        """Convierte el BLOB a base64 para enviar al frontend"""
+        if obj.foto:
+            try:
+                # Convertir bytes a base64
+                base64_image = base64.b64encode(obj.foto).decode('utf-8')
+                # Detectar tipo de imagen usando Pillow
+                image_type = self._detect_image_type(obj.foto)
+                return f"data:image/{image_type};base64,{base64_image}"
+            except Exception:
+                return None
+        return None
+    
+    def validate_foto(self, value):
+        """Valida y convierte imagen base64 a bytes"""
+        if not value:
+            return None
+        
+        try:
+            # Si viene como base64 con prefijo data:image
+            if isinstance(value, str) and value.startswith('data:image'):
+                # Extraer el base64 puro
+                header, base64_data = value.split(',', 1)
+                image_data = base64.b64decode(base64_data)
+            elif isinstance(value, str):
+                # Si viene solo el base64
+                image_data = base64.b64decode(value)
+            elif isinstance(value, bytes):
+                # Si ya viene como bytes
+                image_data = value
+            else:
+                raise serializers.ValidationError("Formato de imagen inválido")
+            
+            # Validar que sea una imagen válida usando Pillow
+            try:
+                img = Image.open(BytesIO(image_data))
+                img.verify()  # Verifica que sea una imagen válida
+                
+                # Validar formato
+                allowed_formats = ['JPEG', 'JPG', 'PNG', 'GIF', 'WEBP', 'BMP']
+                if img.format.upper() not in allowed_formats:
+                    raise serializers.ValidationError(
+                        f"Formato {img.format} no permitido. Usa: {', '.join(allowed_formats)}"
+                    )
+                
+                # Validar tamaño (max 5MB)
+                max_size = 5 * 1024 * 1024  # 5MB en bytes
+                if len(image_data) > max_size:
+                    raise serializers.ValidationError(
+                        f"Imagen muy grande. Máximo 5MB, recibido: {len(image_data) / 1024 / 1024:.2f}MB"
+                    )
+                
+            except Exception as e:
+                raise serializers.ValidationError(f"Imagen corrupta o inválida: {str(e)}")
+            
+            return image_data
+            
+        except base64.binascii.Error:
+            raise serializers.ValidationError("Base64 inválido")
+        except Exception as e:
+            raise serializers.ValidationError(f"Error procesando imagen: {str(e)}")
+    
+    def to_representation(self, instance):
+        """Personalizar la salida para incluir foto como base64"""
+        representation = super().to_representation(instance)
+        # La foto ya se convierte automáticamente con get_foto_url
+        # Remover el campo foto (bytes) y dejar solo foto_url
+        representation.pop('foto', None)
+        return representation
 
 class DetalleVentaSerializer(serializers.ModelSerializer):
     producto_detalle = ProductosSerializer(source='producto', read_only=True)
