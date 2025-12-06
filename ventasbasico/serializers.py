@@ -13,6 +13,7 @@ class ProductosSerializer(serializers.ModelSerializer):
     """Serializer para productos con soporte de imágenes en base64"""
     foto = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     foto_url = serializers.SerializerMethodField(read_only=True)
+    codigo = serializers.CharField(read_only=True)  # Código es solo lectura, se genera automático
     
     class Meta:
         model = Productos

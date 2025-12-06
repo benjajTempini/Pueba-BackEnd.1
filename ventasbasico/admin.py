@@ -10,14 +10,20 @@ from .models import Productos, Venta, DetalleVenta
 
 @admin.register(Productos)
 class ProductosAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'codigo', 'precio', 'stock', 'estado_stock', 'tiene_descripcion_ia')
+    list_display = ('codigo', 'nombre', 'precio', 'stock', 'estado_stock', 'tiene_descripcion_ia')
     list_filter = ('precio', 'stock', 'descripcion_generada_fecha')
     search_fields = ('nombre', 'codigo', 'descripcion_corta', 'descripcion_larga')
-    ordering = ('nombre',)
+    ordering = ('codigo',)  # Ordenar por código automático
     
     fieldsets = (
         ('Información Básica', {
-            'fields': ('nombre', 'codigo', 'precio', 'stock')
+            'fields': ('nombre', 'precio', 'stock'),  # Código removido, se genera automático
+            'description': 'El código se genera automáticamente'
+        }),
+        ('Código Generado', {
+            'fields': ('codigo',),
+            'classes': ('collapse',),
+            'description': '🤖 Código generado automáticamente al guardar'
         }),
         ('Descripciones Generadas por IA', {
             'fields': ('descripcion_corta', 'descripcion_larga', 'palabras_clave', 'beneficios', 'descripcion_generada_fecha'),
@@ -26,7 +32,7 @@ class ProductosAdmin(admin.ModelAdmin):
         }),
     )
     
-    readonly_fields = ('descripcion_generada_fecha',)
+    readonly_fields = ('codigo', 'descripcion_generada_fecha')  # Código es readonly
     
     def estado_stock(self, obj):
         if obj.stock == 0:

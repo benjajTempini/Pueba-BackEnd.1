@@ -4,7 +4,7 @@ from .models import Productos, Venta, DetalleVenta
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Productos
-        fields = ['nombre', 'codigo', 'stock', 'precio']
+        fields = ['nombre', 'stock', 'precio']  # Código se genera automático
 
 class VentaForm(forms.ModelForm):
     class Meta:
